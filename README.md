@@ -3,9 +3,6 @@
 https://miro.com/app/board/uXjVJYWSi6c=/?share_link_id=134124900492 Refer Mind Map for Start
 
 
-I have already formatted the content for you in Markdown in my previous response.
-
-You can copy the entire block below and save it as a `README.md` file in your project's root directory.
 
 -----
 
