@@ -122,7 +122,10 @@ pulsequery-ai/
 │   └── chromadb/            # Vector database storage
 ├── tests/
 │   └── test_rag.py         # Test scripts
+├── logs/
+│   └── app_20250805_084856.log         # Logs Store
 └── requirements.txt
+
 ```
 
 ## ⚙️ Configuration
