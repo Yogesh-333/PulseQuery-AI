@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 # ✅ ENHANCED: File + Console Logging Configuration
-LOG_DIR = 'log'
+LOG_DIR = 'logs'
 LOG_FILENAME = f'app_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
 # Create the log directory if it does not exist
 os.makedirs(LOG_DIR, exist_ok=True)
