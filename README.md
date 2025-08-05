@@ -297,6 +297,26 @@ GET /health                 # Detailed health check
 GET /api/medgemma/status    # Model status
 GET /api/rag/stats          # RAG system statistics
 ```
+## 🔄 Where and Why We Deviated from tradiotnal prompt optimisation
+1. **N-gram Models → Transformer Embeddings**
+Original Plan: Classical statistical n-gram language models
+What We Built: Embedding-based semantic similarity with MedEmbed
+Why: N-gram models are outdated for modern NLP. Transformer embeddings provide far superior semantic understanding, especially for medical content.
+
+2. **Statistical Fluency → Medical Template Engineering**
+Original Plan: Prompt fluency scoring based on n-gram statistics
+What We Built: Sophisticated medical prompt templates with quality metrics
+Why: Medical AI needs domain-specific prompt engineering, not generic fluency scores.
+
+3. **Generic Tokenization → Medical Information Extraction**
+Original Plan: Basic text preprocessing and tokenization
+What We Built: Advanced patient information extraction and medical specialty detection
+Why: Medical prompts require structured information extraction (patient data, symptoms, etc.) rather than just tokenization.
+
+4. **Simple Scoring → Comprehensive Quality Metrics**
+Original Plan: Basic prompt scoring algorithm
+What We Built: Multi-dimensional quality metrics (context utilization, patient specificity, medical terminology density)
+Why: Medical prompt quality is multi-faceted and requires domain-specific evaluation.
 
 ## 🔧 Troubleshooting
 
