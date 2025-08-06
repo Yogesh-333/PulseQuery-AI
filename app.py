@@ -149,7 +149,7 @@ def create_app(config_name='default'):
             app.medgemma = None
             logger.info("❌ MedGemma not available")
         
-        # ✅ MILESTONE 5: Initialize RAG system with English Prompt Optimizer
+        # ✅ Initialize RAG system with English Prompt Optimizer
         if RAG_AVAILABLE:
             try:
                 logger.info("🔄 Creating enhanced RAG system with prompt optimization...")
@@ -206,7 +206,7 @@ def create_app(config_name='default'):
                 app.rag_system = None
                 logger.info("✅ RAG system initialized successfully!")
                 
-                # ✅ MILESTONE 5: Add English prompt optimizer to RAG system
+                # ✅ Add English prompt optimizer to RAG system
                 try:
                     from core.prompt_optimizer import EnglishMedicalPromptOptimizer
                     app.rag_system.prompt_optimizer = EnglishMedicalPromptOptimizer()
@@ -479,7 +479,7 @@ def register_routes(app):
         elif RAG_AVAILABLE and not app.rag_system:
             rag_status = "❌ Import OK, Init Failed"
         
-        # ✅ MILESTONE 5: Check prompt optimizer status
+        # ✅ Check prompt optimizer status
         prompt_optimizer_status = "❌ Not Available"
         if app.rag_system and hasattr(app.rag_system, 'prompt_optimizer') and app.rag_system.prompt_optimizer:
             prompt_optimizer_status = "✅ Ready"
@@ -488,7 +488,7 @@ def register_routes(app):
             "message": "🔬 PulseQuery AI - Complete Medical System",
             "status": "Running",
             "milestone": 5,
-            "enhancement": "Milestone 5: English Prompt Optimization System",
+            "enhancement": "English Prompt Optimization System",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "authenticated": user_info is not None,
             "user": user_info,
@@ -627,7 +627,7 @@ def register_routes(app):
             health_status["components"]["rag_system"] = "❌ Import Failed"
             health_status["components"]["document_upload"] = "❌ Not Available"
         
-        # ✅ MILESTONE 5: Prompt optimizer health
+        # ✅ Prompt optimizer health
         if app.rag_system and hasattr(app.rag_system, 'prompt_optimizer') and app.rag_system.prompt_optimizer:
             health_status["components"]["prompt_optimizer"] = "✅ Ready"
         else:
@@ -707,7 +707,7 @@ def register_routes(app):
                 "milestone": 5
             })
 
-    # ✅ MILESTONE 5: FIXED Prompt Optimization Endpoint
+    # ✅ FIXED Prompt Optimization Endpoint
     @app.route('/api/prompt/optimize', methods=['POST'])
     @require_auth(app.session_manager)  
     def optimize_prompt():
@@ -1106,7 +1106,7 @@ def register_routes(app):
                 }
             }), 500
 
-    # ✅ MILESTONE 5: Enhanced Test UI with MARKDOWN RENDERING
+    # ✅ Enhanced Test UI with MARKDOWN RENDERING
     @app.route('/test-ui')
     def test_ui():
         """Complete test interface with markdown rendering capability"""
@@ -1116,7 +1116,7 @@ def register_routes(app):
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>PulseQuery AI - Milestone 5: Prompt Optimization</title>
+            <title>PulseQuery AI - Prompt Optimization</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
             <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
             <style>
@@ -1215,6 +1215,60 @@ def register_routes(app):
                     animation: spin 1s linear infinite;
                     margin-right: 8px;
                 }
+                .header-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
+                    padding: 20px 24px;
+                    background: transparent;
+                }
+
+                .logo-frame {
+                    background: white;
+                    border-radius: 16px;
+                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+                    padding: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 80px;
+                    min-height: 80px;
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+
+                .logo-frame:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+                }
+
+                .logo-image {
+                    width: 60px;
+                    height: 60px;
+                    object-fit: contain;
+                    border-radius: 8px;
+                }
+
+                .header-content {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                }
+
+                .main-title {
+                    margin: 0;
+                    font-size: 2.2rem;
+                    font-weight: 700;
+                    color: white;
+                    line-height: 1.1;
+                }
+
+                .subtitle {
+                    margin: 4px 0 0 0;
+                    font-size: 0.95rem;
+                    color: rgba(255, 255, 255, 0.9);
+                    font-weight: 400;
+                }
+
                 @keyframes spin {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
@@ -1304,17 +1358,24 @@ def register_routes(app):
                 <!-- Header -->
                 <div class="card">
                     <div class="card-header">
-                        <h1>🏥 PulseQuery AI - Milestone 5: Prompt Optimization</h1>
-                        <p class="mb-0">Advanced Medical AI with English Prompt Optimization System & Markdown Rendering</p>
+                        <div class="header-container">
+                        <div class="logo-frame">
+                            <img src="/static/logo.png" alt="PulseQuery Logo" class="logo-image">
+                        </div>
+                        <div class="header-content">
+                            <h1 class="main-title">PulseQuery AI</h1>
+                            <p class="subtitle">Advanced Medical Intelligence Platform</p>
+                        </div>
+                    </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Milestone:</strong> 5 - English Prompt Optimization</p>
+                            <p><strong>Version:</strong> 5.0 - Clinical Intelligence PlatformI</p>
                             <p><strong>Status:</strong> <span id="systemStatus" class="status-badge">Checking...</span></p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Features:</strong> Query Classification, Medical Specialization, Patient Info Extraction</p>
-                            <p><strong>Enhancement:</strong> Template-based Medical Prompt Engineering + Markdown Rendering</p>
+                            <p><strong>Core Capabilities:</strong> Smart Query Analysis • Medical AI • Patient Data Extraction</p>
+                            <p><strong>Latest:</strong> Enhanced Prompt Engineering + Markdown Support</p>
                         </div>
                     </div>
                 </div>
@@ -1382,13 +1443,12 @@ def register_routes(app):
                     <small class="text-muted mt-2">Demo Passwords: password123, admin123, nurse123, resident123</small>
                 </div>
 
-                <!-- ✅ MILESTONE 5: Interactive Prompt Optimization Workflow -->
+                <!-- ✅ AI-Assisted Medical Query Processing -->
                 <div class="card" id="promptOptimizationCard" style="display: none;">
                     <div class="card-header">
-                        <h5>🧠 Milestone 5: Interactive Prompt Optimization Workflow</h5>
-                        <small>Enter Query → System Optimizes → Review/Edit → Generate AI Response (with Markdown Rendering)</small>
-                    </div>
-                    
+                        <h5>🧠 AI-Assisted Prompt Optimization</h5>
+                        <small>Submit medical query → AI optimizes prompt → Review & edit → Generate detailed insights(optional user context)</small>
+                    </div>                    
                     <!-- Step 1: User Query Input -->
                     <div class="mb-4">
                         <label class="form-label"><strong>Step 1: Enter Medical Query</strong></label>
@@ -1421,7 +1481,7 @@ def register_routes(app):
                             <div class="row">
                                 <div class="col-md-8">
                                     <button class="btn btn-success btn-lg" onclick="generateFromPrompt()">
-                                        🤖 Generate AI Response (Markdown Rendered)
+                                        🤖 Generate AI Response
                                     </button>
                                     <button class="btn btn-secondary" onclick="resetOptimization()">
                                         🔄 Start Over
@@ -1434,10 +1494,10 @@ def register_routes(app):
                         </div>
                     </div>
                     
-                    <!-- Step 3: AI Response Display with Markdown Rendering -->
+                    <!-- Step 3: AI Response Display -->
                     <div id="aiResponseSection" style="display: none;">
                         <hr>
-                        <label class="form-label"><strong>Step 3: AI Generated Medical Response (Markdown Rendered)</strong></label>
+                        <label class="form-label"><strong>Step 3: AI Generated Medical Response</strong></label>
                         <div id="aiResponse" class="alert alert-success"></div>
                         <div class="row">
                             <div class="col-md-8">
@@ -1446,7 +1506,7 @@ def register_routes(app):
                                 </div>
                             </div>
                             <div class="col-md-4 text-end">
-                                <button class="btn btn-info btn-sm" onclick="copyResponse()">📋 Copy Original Markdown</button>
+                                <button class="btn btn-info btn-sm" onclick="copyResponse()">📋 Copy Response</button>
                                 <button class="btn btn-primary btn-sm" onclick="resetForNew()">✨ New Query</button>
                             </div>
                         </div>
@@ -1492,8 +1552,8 @@ def register_routes(app):
                 <!-- Footer -->
                 <div class="card">
                     <div class="text-center">
-                        <p class="mb-2"><strong>PulseQuery AI - Milestone 5</strong> - English Prompt Optimization System with Markdown Rendering</p>
-                        <p class="mb-0 text-muted">Advanced Medical AI with Interactive Template-based Prompt Engineering</p>
+                        <p class="mb-2"><strong>PulseQuery AI</strong></p>
+                        <p class="mb-0 text-muted">Empowering Healthcare with AI-Driven Insights</p>
                     </div>
                 </div>
             </div>
@@ -1541,7 +1601,6 @@ def register_routes(app):
                             '<div class="alert alert-success">' +
                             '<h6>✅ Connection Test Successful</h6>' +
                             '<p><strong>Message:</strong> ' + data.message + '</p>' +
-                            '<p><strong>Milestone:</strong> ' + data.milestone + '</p>' +
                             '<p><strong>Timestamp:</strong> ' + new Date(data.timestamp).toLocaleString() + '</p>' +
                             '</div>';
                     })
@@ -1594,7 +1653,6 @@ def register_routes(app):
                         html += '<p><strong>Status:</strong> ' + data.status + '</p>';
                         html += '<p><strong>Progress:</strong> ' + (data.progress || 0) + '%</p>';
                         html += '<p><strong>Device:</strong> ' + (data.device || 'Unknown') + '</p>';
-                        html += '<p><strong>Milestone:</strong> ' + (data.milestone || 'Unknown') + '</p>';
                         html += '</div>';
                         document.getElementById('systemResults').innerHTML = html;
                     })
@@ -1709,7 +1767,7 @@ def register_routes(app):
                     });
                 }
 
-                // ✅ MILESTONE 5: Interactive Prompt Optimization Functions
+                // ✅ Interactive Prompt Optimization Functions
                 function optimizePrompt() {
                     const query = document.getElementById('userQuery').value.trim();
                     const useContext = document.getElementById('useContext').checked;
@@ -1825,7 +1883,7 @@ def register_routes(app):
                     const loadingDiv = document.createElement('div');
                     loadingDiv.id = 'generationLoading';
                     loadingDiv.className = 'alert alert-warning';
-                    loadingDiv.innerHTML = '<div class="loading-spinner"></div>🤖 Generating AI response from optimized prompt with markdown rendering...';
+                    loadingDiv.innerHTML = '<div class="loading-spinner"></div>🤖 Generating AI response from optimized prompt...';
                     
                     const promptCard = document.getElementById('promptOptimizationCard');
                     promptCard.appendChild(loadingDiv);
@@ -1864,7 +1922,6 @@ def register_routes(app):
                                 `Response: ${data.generation_info.response_length} chars | ` +
                                 `Device: ${data.generation_info.device} | ` +
                                 `Generated: ${new Date(data.timestamp).toLocaleTimeString()} | ` +
-                                `Milestone: ${data.milestone} | ` +
                                 `Format: Rendered Markdown ✅`;
                             
                             document.getElementById('aiResponseSection').style.display = 'block';
@@ -1958,7 +2015,6 @@ def register_routes(app):
                                 '<h6>✅ Document Processed Successfully!</h6>' +
                                 '<p><strong>File:</strong> ' + (data.original_filename || 'Unknown') + '</p>' +
                                 '<p><strong>Chunks:</strong> ' + (data.chunks_created || 0) + '</p>' +
-                                '<p><strong>Milestone:</strong> ' + (data.milestone || 'Unknown') + '</p>' +
                                 '</div>';
                             fileInput.value = '';
                         } else {
@@ -1987,7 +2043,7 @@ def register_routes(app):
 
 # Main execution
 if __name__ == '__main__':
-    logger.info("🚀 Starting PulseQuery AI - Milestone 5: English Prompt Optimization")
+    logger.info("🚀 Starting PulseQuery AI - English Prompt Optimization")
     logger.info("🔧 Features: English Medical Prompt Optimizer, Query Classification, Medical Specialization")
     logger.info("🧠 Enhanced: Template-based Medical Prompt Engineering")
     logger.info("📄 NEW: Interactive Prompt Optimization Workflow with Markdown Rendering")
