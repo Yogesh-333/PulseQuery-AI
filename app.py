@@ -1370,7 +1370,7 @@ def register_routes(app):
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Version:</strong> 5.0 - Clinical Intelligence PlatformI</p>
+                            <p><strong>Version:</strong> 5.0 - Clinical Intelligence Platform</p>
                             <p><strong>Status:</strong> <span id="systemStatus" class="status-badge">Checking...</span></p>
                         </div>
                         <div class="col-md-6">
