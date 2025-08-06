@@ -1,26 +1,24 @@
 import logging
 import warnings
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 # ✅ ENHANCED: File + Console Logging Configuration
-LOG_DIR = 'logs'
+LOG_DIR = 'log'
 LOG_FILENAME = f'app_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
-# Create the log directory if it does not exist
 os.makedirs(LOG_DIR, exist_ok=True)
-# Create the full log file path
 log_file_path = os.path.join(LOG_DIR, LOG_FILENAME)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[
-        logging.FileHandler(log_file_path, mode='w', encoding='utf-8'),  # Write to file
-        logging.StreamHandler()  # Also display on console
+        logging.FileHandler(log_file_path, mode='w', encoding='utf-8'),
+        logging.StreamHandler()
     ]
 )
 
-# ✅ SUPPRESS: Tokenizer and model warnings (still needed)
+# ✅ SUPPRESS: Tokenizer and model warnings
 logging.getLogger('transformers').setLevel(logging.ERROR)
 logging.getLogger('llama_cpp').setLevel(logging.ERROR)
 logging.getLogger('sentence_transformers').setLevel(logging.ERROR)
@@ -38,27 +36,20 @@ class NoiseFilter(logging.Filter):
             return False
         return True
 
-# Apply filter to root logger
 logging.getLogger().addFilter(NoiseFilter())
-
-# Suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-# Create logger instance
 logger = logging.getLogger(__name__)
 logger.info(f"🗂️ Logging initialized - File: {LOG_FILENAME}")
 
-
 from flask import Flask, jsonify, render_template_string, request, session
-import os
 import tempfile
 import time
 import uuid
 import gc
 import re
 import traceback
-from datetime import datetime, timezone
 from config.config import config
 
 # Import authentication services
@@ -137,7 +128,6 @@ def create_app(config_name='default'):
                 app.medgemma.start_background_loading()
                 logger.info("✅ MedGemma initialization started")
                 
-                # Non-blocking status check
                 try:
                     status = app.medgemma.get_loading_status()
                     logger.info(f"📊 Initial model status: {status}")
@@ -152,19 +142,18 @@ def create_app(config_name='default'):
                     
             except Exception as model_error:
                 logger.info(f"❌ MedGemma initialization failed: {model_error}")
-                traceback.logger.info_exc()
+                traceback.print_exc()
                 app.medgemma = None
                 
         else:
             app.medgemma = None
             logger.info("❌ MedGemma not available")
         
-        # Initialize RAG system with ENHANCED error handling and debugging
+        # ✅ MILESTONE 5: Initialize RAG system with English Prompt Optimizer
         if RAG_AVAILABLE:
             try:
-                logger.info("🔄 Creating enhanced RAG system instance...")
+                logger.info("🔄 Creating enhanced RAG system with prompt optimization...")
                 
-                # Ensure data directory exists with proper permissions
                 data_dir = 'data/chromadb'
                 os.makedirs(data_dir, exist_ok=True)
                 logger.info(f"📁 Data directory created: {data_dir}")
@@ -180,12 +169,21 @@ def create_app(config_name='default'):
                     logger.info(f"⚠️ Directory permission issue: {perm_error}")
                 
                 # Initialize RAG system with medical embeddings
-                logger.info("🧠 Initializing with medical embeddings...")
+                logger.info("🧠 Initializing with medical embeddings and prompt optimization...")
                 app.rag_system = RAGSystem(
                     data_dir=data_dir,
-                    embedding_model="medical"  # Use medical embeddings
+                    embedding_model="medical"
                 )
                 logger.info("✅ RAG system initialized successfully!")
+                
+                # ✅ MILESTONE 5: Add English prompt optimizer to RAG system
+                try:
+                    from core.prompt_optimizer import EnglishMedicalPromptOptimizer
+                    app.rag_system.prompt_optimizer = EnglishMedicalPromptOptimizer()
+                    logger.info("✅ English Medical Prompt Optimizer integrated!")
+                except ImportError as opt_error:
+                    logger.info(f"⚠️ Prompt optimizer import failed: {opt_error}")
+                    app.rag_system.prompt_optimizer = None
                 
                 # Test basic functionality
                 try:
@@ -359,7 +357,7 @@ Generate detailed medical report:"""
                     app.rag_system
                 )
                 
-                logger.info("✅ Enhanced RAG system with improved prompts initialized!")
+                logger.info("✅ Enhanced RAG system with prompt optimization initialized!")
                 
                 # Initialize session manager with RAG database
                 app.session_manager = SessionManager(
@@ -368,17 +366,9 @@ Generate detailed medical report:"""
                 )
                 logger.info("✅ Session manager initialized with RAG integration")
                 
-            except ImportError as rag_import_error:
-                logger.info(f"❌ RAG import error: {rag_import_error}")
-                logger.info("📦 Missing dependencies. Install with:")
-                logger.info("   pip install chromadb sentence-transformers langchain")
-                app.rag_system = None
-                app.session_manager = SessionManager()
-                
             except Exception as rag_error:
                 logger.info(f"❌ RAG system initialization failed: {rag_error}")
-                logger.info("📍 Full error traceback:")
-                traceback.logger.info_exc()
+                traceback.print_exc()
                 
                 # Try simple fallback
                 logger.info("🔄 Attempting simple RAG fallback...")
@@ -386,6 +376,7 @@ Generate detailed medical report:"""
                     class SimpleRAGFallback:
                         def __init__(self):
                             self.documents = []
+                            self.prompt_optimizer = None
                             logger.info("⚠️ Using simple RAG fallback")
                         
                         def ingest_document_from_file(self, file_path, doc_type='medical', language='en'):
@@ -417,8 +408,9 @@ Generate detailed medical report:"""
         
     except Exception as e:
         logger.info(f"❌ CRITICAL ERROR in create_app(): {e}")
-        traceback.logger.info_exc()
+        traceback.print_exc()
         raise
+
 
 def register_routes(app):
     """Register all application routes"""
@@ -457,11 +449,16 @@ def register_routes(app):
         elif RAG_AVAILABLE and not app.rag_system:
             rag_status = "❌ Import OK, Init Failed"
         
+        # ✅ MILESTONE 5: Check prompt optimizer status
+        prompt_optimizer_status = "❌ Not Available"
+        if app.rag_system and hasattr(app.rag_system, 'prompt_optimizer') and app.rag_system.prompt_optimizer:
+            prompt_optimizer_status = "✅ Ready"
+        
         return jsonify({
             "message": "🔬 PulseQuery AI - Complete Medical System",
             "status": "Running",
-            "milestone": 4,
-            "enhancement": "Complete system with debugging and medical embeddings",
+            "milestone": 5,
+            "enhancement": "Milestone 5: English Prompt Optimization System",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "authenticated": user_info is not None,
             "user": user_info,
@@ -469,6 +466,7 @@ def register_routes(app):
                 "flask": "✅ Running",
                 "medgemma": medgemma_status,
                 "rag_system": rag_status,
+                "prompt_optimizer": prompt_optimizer_status,
                 "auth_service": "✅ Ready" if app.auth_service else "❌ Failed",
                 "session_manager": "✅ Ready" if app.session_manager else "❌ Failed",
                 "enhanced_prompts": "✅ V2.0 Enabled",
@@ -508,7 +506,7 @@ def register_routes(app):
                 "message": "Login successful",
                 "user": user_info,
                 "session_id": session_id,
-                "milestone": 4
+                "milestone": 5
             })
             
         except Exception as e:
@@ -530,7 +528,7 @@ def register_routes(app):
             return jsonify({
                 "success": True,
                 "message": "Logout successful",
-                "milestone": 4
+                "milestone": 5
             })
             
         except Exception as e:
@@ -545,7 +543,6 @@ def register_routes(app):
         """Comprehensive system health check"""
         user_info = getattr(request, 'current_user', None)
         
-        # Detailed component health
         health_status = {
             "status": "healthy",
             "authenticated": user_info is not None,
@@ -555,12 +552,13 @@ def register_routes(app):
                 "auth_service": "✅ Ready" if app.auth_service else "❌ Failed",
                 "session_manager": "✅ Ready" if app.session_manager else "❌ Failed",
             },
-            "milestone": 4,
+            "milestone": 5,
             "debug_info": {
                 "RAG_AVAILABLE": RAG_AVAILABLE,
                 "MEDGEMMA_AVAILABLE": MEDGEMMA_AVAILABLE,
                 "rag_system_instance": app.rag_system is not None,
-                "medgemma_instance": app.medgemma is not None
+                "medgemma_instance": app.medgemma is not None,
+                "prompt_optimizer_available": app.rag_system and hasattr(app.rag_system, 'prompt_optimizer') and app.rag_system.prompt_optimizer is not None
             }
         }
         
@@ -599,9 +597,14 @@ def register_routes(app):
             health_status["components"]["rag_system"] = "❌ Import Failed"
             health_status["components"]["document_upload"] = "❌ Not Available"
         
+        # ✅ MILESTONE 5: Prompt optimizer health
+        if app.rag_system and hasattr(app.rag_system, 'prompt_optimizer') and app.rag_system.prompt_optimizer:
+            health_status["components"]["prompt_optimizer"] = "✅ Ready"
+        else:
+            health_status["components"]["prompt_optimizer"] = "❌ Not Available"
+        
         return jsonify(health_status)
 
-    # Model status and generation endpoints
     @app.route('/api/medgemma/status')
     @optional_auth(app.session_manager)
     def medgemma_status():
@@ -617,7 +620,7 @@ def register_routes(app):
         try:
             status = app.medgemma.get_loading_status()
             return jsonify({
-                "milestone": 4,
+                "milestone": 5,
                 **status,
                 "gpu_support": "Enabled",
                 "model_file": "medgemma-4b-it-Q8_0.gguf"
@@ -626,80 +629,289 @@ def register_routes(app):
             return jsonify({
                 "status": "error",
                 "error": str(e),
-                "milestone": 4
+                "milestone": 5
             })
 
-    @app.route('/api/medgemma/generate-simple', methods=['POST'])
-    @require_auth(app.session_manager)
-    def medgemma_generate_simple():
-        """Simple generation with improved prompts"""
-        if not MEDGEMMA_AVAILABLE or not app.medgemma:
-            return jsonify({"error": "MedGemma not available"}), 503
-        
-        if not app.medgemma.is_ready():
-            return jsonify({"error": "Model not ready"}), 503
+    # ✅ MILESTONE 5: FIXED Prompt Optimization Endpoint
+    @app.route('/api/prompt/optimize', methods=['POST'])
+    @require_auth(app.session_manager)  
+    def optimize_prompt():
+        """Optimize medical prompt from user query with enhanced error handling and query preservation"""
+        logger.info("🧠 PROMPT OPTIMIZATION ENDPOINT CALLED")
         
         try:
             data = request.get_json()
-            original_prompt = data.get('prompt', "Generate a medical summary.")
+            query = data.get('query')
+            use_context = data.get('use_context', True)
             
-            # Enhanced simple prompt
-            if "Patient Name:" in original_prompt:
-                patient_match = re.search(r'Patient Name:\s*([^,\n]+)', original_prompt, re.IGNORECASE)
-                if patient_match:
-                    patient_name = patient_match.group(1).strip()
-                    simple_prompt = f"""You are a medical AI assistant. Create a comprehensive medical report for {patient_name}.
-
-Generate a detailed medical report with the following structure:
-
-## MEDICAL REPORT: {patient_name}
-
-### PATIENT IDENTIFICATION
-- Patient Name: {patient_name}
-- Age: [Based on available information]
-- Gender: [To be determined from records]
-
-### CHIEF COMPLAINT
-[Main reason for medical visit or concern]
-
-### MEDICAL HISTORY
-[Past medical conditions, surgeries, chronic diseases]
-
-### CURRENT SYMPTOMS
-[Present symptoms and clinical presentation]
-
-### MEDICATIONS
-[Current medications and treatments]
-
-### CLINICAL FINDINGS
-[Physical examination and test results]
-
-### ASSESSMENT AND PLAN
-[Medical assessment and treatment recommendations]
-
-Please provide detailed content for each section:"""
-                else:
-                    simple_prompt = f"You are a medical AI assistant. {original_prompt}\n\nProvide a comprehensive medical response:"
-            else:
-                simple_prompt = f"You are a medical AI assistant. Please provide a detailed response to: {original_prompt}"
+            logger.info(f"📋 Query received: {query[:100]}..." if query else "📋 No query provided")
+            logger.info(f"🔍 Use context: {use_context}")
             
+            if not query:
+                logger.error("❌ No query provided")
+                return jsonify({'error': 'Query is required for optimization'}), 400
+            
+            if not hasattr(app.rag_system, 'prompt_optimizer') or not app.rag_system.prompt_optimizer:
+                logger.error("❌ Prompt optimizer not available")
+                return jsonify({'error': 'Prompt optimizer not available'}), 503
+            
+            logger.info("✅ Prompt optimizer found, proceeding...")
+            
+            # Get context documents if requested
+            context_docs = []
+            if use_context and app.rag_system:
+                try:
+                    context_docs = app.rag_system.search_relevant_context(query, max_docs=3)
+                    logger.info(f"📄 Found {len(context_docs)} context documents")
+                except Exception as context_error:
+                    logger.warning(f"⚠️ Context search failed: {context_error}")
+                    context_docs = []
+            
+            # ✅ FIX: Enhanced error handling for optimization with query preservation
+            try:
+                logger.info("🔄 Calling prompt optimizer...")
+                result = app.rag_system.prompt_optimizer.optimize_prompt(query, context_docs)
+                logger.info(f"✅ Optimization complete, prompt length: {len(result.get('optimized_prompt', ''))} chars")
+                
+                # ✅ CRITICAL FIX: Verify the query is included in the optimized prompt
+                optimized_prompt = result.get('optimized_prompt', '')
+                if not optimized_prompt or len(optimized_prompt.strip()) < 50:
+                    logger.warning("⚠️ Optimized prompt is too short or empty, using enhanced fallback")
+                    raise ValueError("Generated prompt is too short or empty")
+                
+                # Check if there was an error in the result
+                if 'error' in result:
+                    logger.warning(f"Optimization had issues: {result['error']}")
+                
+            except Exception as opt_error:
+                logger.error(f"❌ Optimization completely failed: {opt_error}")
+                
+                # ✅ ENHANCED FALLBACK: Always preserve the user's query
+                context_summary = "No relevant medical documents found." if not context_docs else f"Found {len(context_docs)} relevant documents."
+                
+                fallback_prompt = f"""You are a medical AI assistant specializing in symptom analysis and diagnosis.
+
+    PATIENT SYMPTOMS AND QUESTION:
+    {query}
+
+    CLINICAL CONTEXT:
+    {context_summary}
+
+    Please provide a comprehensive medical response that includes:
+
+    ## SYMPTOM ANALYSIS
+
+    ### SYMPTOM CHARACTERIZATION
+    Detail the presenting symptoms with onset, duration, and characteristics.
+
+    ### DIFFERENTIAL DIAGNOSIS
+    List potential diagnoses ranked by likelihood with supporting evidence.
+
+    ### RECOMMENDED DIAGNOSTIC WORKUP
+    Suggest appropriate tests, imaging, and consultations.
+
+    ### MANAGEMENT RECOMMENDATIONS
+    Provide treatment suggestions and monitoring plans.
+
+    Generate a thorough medical analysis addressing the patient's symptoms and diagnostic question:"""
+                
+                return jsonify({
+                    'success': True,
+                    'original_query': query,
+                    'optimized_prompt': fallback_prompt,
+                    'query_type': 'symptom_analysis',
+                    'medical_specialty': 'general_medicine',
+                    'patient_info': {'name': None, 'age': None, 'gender': None, 'chief_complaint': None},
+                    'metrics': {
+                        'length': len(fallback_prompt), 
+                        'token_estimate': len(fallback_prompt)//4, 
+                        'context_utilization': 0.0, 
+                        'patient_specificity': 0.0, 
+                        'medical_terminology_density': 0.3
+                    },
+                    'context_docs_used': len(context_docs),
+                    'optimized_by': request.current_user["user_name"],
+                    'milestone': 5,
+                    'fallback_used': True,
+                    'optimization_error': str(opt_error)
+                })
+            
+            # ✅ FIX: Safe attribute access with proper error handling
+            try:
+                # Safe extraction of patient info
+                patient_info = result.get('patient_info')
+                patient_data = {
+                    'name': getattr(patient_info, 'name', None) if patient_info else None,
+                    'age': getattr(patient_info, 'age', None) if patient_info else None,
+                    'gender': getattr(patient_info, 'gender', None) if patient_info else None,
+                    'chief_complaint': getattr(patient_info, 'chief_complaint', None) if patient_info else None
+                }
+                
+                # Safe extraction of metrics
+                metrics = result.get('metrics')
+                metrics_data = {
+                    'length': getattr(metrics, 'length', 0) if metrics else 0,
+                    'token_estimate': getattr(metrics, 'token_estimate', 0) if metrics else 0,
+                    'context_utilization': getattr(metrics, 'context_utilization', 0.0) if metrics else 0.0,
+                    'patient_specificity': getattr(metrics, 'patient_specificity', 0.0) if metrics else 0.0,
+                    'medical_terminology_density': getattr(metrics, 'medical_terminology_density', 0.0) if metrics else 0.0
+                }
+                
+            except Exception as attr_error:
+                logger.warning(f"⚠️ Attribute extraction failed: {attr_error}")
+                # Fallback values
+                patient_data = {'name': None, 'age': None, 'gender': None, 'chief_complaint': None}
+                metrics_data = {
+                    'length': len(result.get('optimized_prompt', '')),
+                    'token_estimate': len(result.get('optimized_prompt', ''))//4,
+                    'context_utilization': 0.0,
+                    'patient_specificity': 0.0,
+                    'medical_terminology_density': 0.0
+                }
+            
+            # ✅ FINAL VALIDATION: Ensure optimized prompt contains the query
+            final_prompt = result.get('optimized_prompt', '')
+            
+            # Check if key words from the query appear in the optimized prompt
+            query_words = set(query.lower().split())
+            prompt_words = set(final_prompt.lower().split())
+            common_words = query_words.intersection(prompt_words)
+            
+            if len(common_words) < 2:  # If less than 2 words match, query might be missing
+                logger.warning("⚠️ Query appears to be missing from optimized prompt, enhancing...")
+                # Inject the query more explicitly
+                final_prompt = final_prompt.replace(
+                    "MEDICAL QUERY:\n", 
+                    f"MEDICAL QUERY:\n{query}\n\n"
+                )
+                if "MEDICAL QUERY:" not in final_prompt:
+                    final_prompt = f"USER QUERY: {query}\n\n{final_prompt}"
+            
+            response_data = {
+                'success': True,
+                'original_query': query,
+                'optimized_prompt': final_prompt,
+                'query_type': result.get('query_type', 'general_medical'),
+                'medical_specialty': result.get('medical_specialty', 'general_medicine'),
+                'patient_info': patient_data,
+                'metrics': metrics_data,
+                'context_docs_used': len(context_docs),
+                'optimized_by': request.current_user["user_name"],
+                'milestone': 5,
+                'has_optimization_warning': 'error' in result,
+                'query_preservation_check': len(common_words) >= 2
+            }
+            
+            logger.info(f"📤 Sending response with {len(response_data['optimized_prompt'])} char prompt")
+            logger.info(f"🔍 Query preservation check: {response_data['query_preservation_check']}")
+            
+            return jsonify(response_data)
+            
+        except Exception as e:
+            logger.error(f"❌ API endpoint failed: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            # ✅ ULTIMATE FALLBACK: Simple but functional response
+            fallback_response = {
+                'success': True,
+                'original_query': query if 'query' in locals() else 'Unknown query',
+                'optimized_prompt': f"You are a medical AI assistant. Please provide a comprehensive medical response to: {query if 'query' in locals() else 'the patient query'}",
+                'query_type': 'general_medical',
+                'medical_specialty': 'general_medicine',
+                'patient_info': {'name': None, 'age': None, 'gender': None, 'chief_complaint': None},
+                'metrics': {
+                    'length': 0,
+                    'token_estimate': 0,
+                    'context_utilization': 0.0,
+                    'patient_specificity': 0.0,
+                    'medical_terminology_density': 0.0
+                },
+                'context_docs_used': 0,
+                'optimized_by': 'System',
+                'milestone': 5,
+                'endpoint_error': True,
+                'error_message': str(e)
+            }
+            
+            return jsonify(fallback_response), 200  # Return 200 to avoid breaking UI
+
+    # ✅ DEBUG: Add debug endpoint to check prompt optimizer status
+    @app.route('/api/debug/optimizer-status')
+    @require_auth(app.session_manager)
+    def debug_optimizer_status():
+        """Debug endpoint to check prompt optimizer status"""
+        try:
+            status = {
+                'rag_system_exists': app.rag_system is not None,
+                'rag_system_type': str(type(app.rag_system).__name__),
+                'has_prompt_optimizer_attr': hasattr(app.rag_system, 'prompt_optimizer') if app.rag_system else False,
+                'prompt_optimizer_exists': app.rag_system.prompt_optimizer is not None if app.rag_system and hasattr(app.rag_system, 'prompt_optimizer') else False,
+                'prompt_optimizer_type': str(type(app.rag_system.prompt_optimizer).__name__) if app.rag_system and hasattr(app.rag_system, 'prompt_optimizer') and app.rag_system.prompt_optimizer else None
+            }
+            
+            if app.rag_system and hasattr(app.rag_system, 'prompt_optimizer') and app.rag_system.prompt_optimizer:
+                # Test basic functionality
+                try:
+                    test_result = app.rag_system.prompt_optimizer.optimize_prompt(
+                        "Test patient with chest pain", 
+                        []
+                    )
+                    status['test_optimization'] = 'SUCCESS'
+                    status['test_prompt_length'] = len(test_result.get('optimized_prompt', ''))
+                except Exception as test_error:
+                    status['test_optimization'] = f'FAILED: {test_error}'
+            
+            return jsonify(status)
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/prompt/generate-final', methods=['POST'])
+    @require_auth(app.session_manager)
+    def generate_from_final_prompt():
+        """Generate AI response from user's final edited prompt"""
+        try:
+            data = request.get_json()
+            final_prompt = data.get('final_prompt')
+            max_tokens = data.get('max_tokens', 600)
+            temperature = data.get('temperature', 0.3)
+            
+            if not final_prompt:
+                return jsonify({'error': 'Final prompt is required'}), 400
+            
+            if not MEDGEMMA_AVAILABLE or not app.medgemma:
+                return jsonify({'error': 'MedGemma not available'}), 503
+            
+            if not app.medgemma.is_ready():
+                return jsonify({'error': 'Model not ready'}), 503
+            
+            # Generate AI response from user's final prompt
             result = app.medgemma.generate_text(
-                prompt=simple_prompt,
-                max_tokens=500,
-                temperature=0.4
+                prompt=final_prompt,
+                max_tokens=max_tokens,
+                temperature=temperature
             )
             
             return jsonify({
-                "success": True,
-                "result": result,
-                "prompt_used": simple_prompt,
-                "test_type": "improved_simple",
-                "generated_by": request.current_user["user_name"]
+                'success': True,
+                'final_prompt': final_prompt,
+                'ai_response': result.get('generated_text', ''),
+                'generation_info': {
+                    'max_tokens': max_tokens,
+                    'temperature': temperature,
+                    'device': result.get('device', 'unknown'),
+                    'prompt_length': len(final_prompt),
+                    'response_length': len(result.get('generated_text', ''))
+                },
+                'generated_by': request.current_user["user_name"],
+                'timestamp': datetime.now().isoformat(),
+                'milestone': 5
             })
             
         except Exception as e:
-            logger.info(f"❌ Simple generation failed: {e}")
-            return jsonify({"error": str(e)}), 500
+            logger.info(f"❌ Final prompt generation failed: {e}")
+            return jsonify({'error': str(e)}), 500
 
     # RAG system endpoints
     @app.route('/api/rag/stats')
@@ -718,13 +930,14 @@ Please provide detailed content for each section:"""
         try:
             stats = app.rag_system.get_system_stats()
             return jsonify({
-                "milestone": 4,
+                "milestone": 5,
                 "rag_stats": stats,
                 "accessed_by": request.current_user["user_name"],
                 "embedding_info": {
                     "model": stats.get('embedding_model', 'Unknown'),
                     "type": "Medical-specialized"
-                }
+                },
+                "prompt_optimizer": "✅ Available" if hasattr(app.rag_system, 'prompt_optimizer') and app.rag_system.prompt_optimizer else "❌ Not Available"
             })
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -735,6 +948,7 @@ Please provide detailed content for each section:"""
         """Enhanced document upload with comprehensive error handling"""
         logger.info(f"🔍 DEBUG: app.rag_system = {app.rag_system}")
         logger.info(f"🔍 DEBUG: RAG_AVAILABLE = {RAG_AVAILABLE}")
+        
         if not RAG_AVAILABLE or not app.rag_system:
             return jsonify({
                 "error": "RAG system not available",
@@ -743,6 +957,13 @@ Please provide detailed content for each section:"""
                     "rag_system_instance": app.rag_system is not None,
                     "suggestion": "Check server logs for RAG initialization errors"
                 }
+            }), 503
+        
+        # Check if it's the fallback system
+        if hasattr(app.rag_system, '__class__') and 'Fallback' in app.rag_system.__class__.__name__:
+            return jsonify({
+                "error": "RAG system in fallback mode - document upload unavailable",
+                "suggestion": "Check server logs for RAG initialization errors"
             }), 503
         
         try:
@@ -791,7 +1012,7 @@ Please provide detailed content for each section:"""
                 return jsonify({
                     "success": result.get('success', True),
                     "message": "Document uploaded and processed successfully",
-                    "milestone": 4,
+                    "milestone": 5,
                     **result
                 })
                 
@@ -801,7 +1022,7 @@ Please provide detailed content for each section:"""
         
         except Exception as e:
             logger.info(f"❌ Upload failed: {e}")
-            traceback.logger.info_exc()
+            traceback.print_exc()
             return jsonify({
                 "error": str(e),
                 "debug": {
@@ -810,173 +1031,197 @@ Please provide detailed content for each section:"""
                 }
             }), 500
 
-    @app.route('/api/rag/search', methods=['POST'])
-    @require_auth(app.session_manager)
-    def rag_search():
-        """Search documents with medical embeddings"""
-        if not RAG_AVAILABLE or not app.rag_system:
-            return jsonify({"error": "RAG system not available"}), 503
-        
-        try:
-            data = request.get_json()
-            query = data.get('query')
-            max_docs = data.get('max_docs', 5)
-            
-            if not query:
-                return jsonify({"error": "Query required"}), 400
-            
-            results = app.rag_system.search_relevant_context(query, max_docs=max_docs)
-            
-            return jsonify({
-                "milestone": 4,
-                "query": query,
-                "results_count": len(results),
-                "results": results,
-                "searched_by": request.current_user["user_name"],
-                "search_type": "Medical semantic search"
-            })
-        
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-    @app.route('/api/medgemma/generate-with-rag', methods=['POST'])
-    @require_auth(app.session_manager)
-    def medgemma_generate_with_rag():
-        """Generate with medical RAG context"""
-        logger.info("🔍 Enhanced RAG Generate endpoint called")
-        
-        if not MEDGEMMA_AVAILABLE or not app.medgemma:
-            return jsonify({"error": "MedGemma not available"}), 503
-        
-        if not RAG_AVAILABLE or not app.rag_system:
-            return jsonify({"error": "RAG system not available"}), 503
-        
-        if not app.medgemma.is_ready():
-            status = app.medgemma.get_loading_status()
-            return jsonify({
-                "error": "Model not ready", 
-                "status": status["status"],
-                "progress": status["progress"]
-            }), 503
-        
-        try:
-            data = request.get_json()
-            prompt = data.get('prompt')
-            max_tokens = min(data.get('max_tokens', 600), 800)
-            temperature = data.get('temperature', 0.3)
-            use_rag = data.get('use_rag', True)
-            
-            logger.info(f"🔍 Enhanced RAG params: prompt_len={len(prompt) if prompt else 0}, max_tokens={max_tokens}, temp={temperature}, use_rag={use_rag}")
-            
-            if not prompt:
-                return jsonify({"error": "Prompt required"}), 400
-            
-            # Get context with medical embeddings
-            context_docs = []
-            final_prompt = prompt
-            
-            if use_rag:
-                context_docs = app.rag_system.search_relevant_context(prompt, max_docs=5)
-                logger.info(f"   Found {len(context_docs)} context documents")
-                
-                # Log similarity scores
-                for i, doc in enumerate(context_docs):
-                    sim_score = doc.get('similarity', 0)
-                    logger.info(f"   Doc {i+1}: {sim_score:.3f} similarity (medical)")
-                
-                # Use medical-enhanced prompt construction
-                final_prompt = app.rag_system.augment_prompt_with_context(prompt, context_docs)
-                logger.info(f"   Final prompt length: {len(final_prompt)} characters")
-                
-                # Safety check
-                estimated_tokens = len(final_prompt) // 4
-                if estimated_tokens + max_tokens > 1900:
-                    max_tokens = max(200, 1900 - estimated_tokens)
-                    logger.info(f"   Adjusted max_tokens to: {max_tokens}")
-            
-            # Generate with medical context
-            result = app.medgemma.generate_text(
-                prompt=final_prompt,
-                max_tokens=max_tokens,
-                temperature=temperature
-            )
-            
-            generated_text = result.get('generated_text', '')
-            logger.info(f"✅ Enhanced generation complete: {len(generated_text)} characters")
-            
-            if not generated_text:
-                logger.info("❌ WARNING: Generated text is empty!")
-                # Fallback with simpler prompt
-                fallback_prompt = f"Create a medical report for: {prompt}"
-                fallback_result = app.medgemma.generate_text(
-                    prompt=fallback_prompt,
-                    max_tokens=300,
-                    temperature=0.5
-                )
-                
-                if fallback_result.get('generated_text'):
-                    result = fallback_result
-                    generated_text = result.get('generated_text', '')
-                    logger.info(f"✅ Fallback successful: {len(generated_text)} characters")
-            
-            return jsonify({
-                "milestone": 4,
-                "success": True,
-                "original_prompt": prompt,
-                "enhanced_prompt_used": use_rag,
-                "final_prompt_length": len(final_prompt),
-                "context_docs_used": len(context_docs),
-                "result": result,
-                "generated_by": request.current_user["user_name"],
-                "medical_context": True,
-                "debug_info": {
-                    "estimated_input_tokens": len(final_prompt) // 4,
-                    "max_tokens_requested": max_tokens,
-                    "similarity_scores": [doc.get('similarity', 0) for doc in context_docs],
-                    "good_docs_count": len([d for d in context_docs if d.get('similarity', 0) > 0]),
-                    "prompt_version": "v2.0_medical"
-                }
-            })
-            
-        except Exception as e:
-            logger.info(f"❌ Enhanced RAG generation failed: {e}")
-            traceback.logger.info_exc()
-            return jsonify({"error": str(e)}), 500
-
-    # Complete Test UI with all functionality
+    # ✅ MILESTONE 5: Enhanced Test UI with MARKDOWN RENDERING
     @app.route('/test-ui')
     def test_ui():
-        """Complete test interface with medical AI features"""
+        """Complete test interface with markdown rendering capability"""
         return """
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>PulseQuery AI - Complete Medical System</title>
+            <title>PulseQuery AI - Milestone 5: Prompt Optimization</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
             <style>
-                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; }
-                .container { max-width: 1400px; margin: 0 auto; }
-                .card { border: 1px solid #dee2e6; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background: white; }
-                .card-header { background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 15px; margin: -20px -20px 20px -20px; border-radius: 8px 8px 0 0; }
-                .btn { padding: 10px 20px; border: none; cursor: pointer; margin: 5px; border-radius: 5px; font-weight: 500; transition: all 0.2s; }
-                .btn-success { background: #28a745; color: white; } .btn-success:hover { background: #218838; }
-                .btn-warning { background: #ffc107; color: #856404; } .btn-warning:hover { background: #e0a800; }
-                .btn-danger { background: #dc3545; color: white; } .btn-danger:hover { background: #c82333; }
-                .btn-info { background: #17a2b8; color: white; } .btn-info:hover { background: #138496; }
-                .btn-primary { background: #007bff; color: white; } .btn-primary:hover { background: #0056b3; }
-                .alert { padding: 15px; margin: 15px 0; border-radius: 5px; border: 1px solid transparent; }
+                body { 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    margin: 20px; 
+                    background-color: #f8f9fa; 
+                }
+                .container { 
+                    max-width: 1400px; 
+                    margin: 0 auto; 
+                }
+                .card { 
+                    border: 1px solid #dee2e6; 
+                    padding: 20px; 
+                    margin: 15px 0; 
+                    border-radius: 8px; 
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+                    background: white; 
+                }
+                .card-header { 
+                    background: linear-gradient(135deg, #007bff, #0056b3); 
+                    color: white; 
+                    padding: 15px; 
+                    margin: -20px -20px 20px -20px; 
+                    border-radius: 8px 8px 0 0; 
+                }
+                .btn { 
+                    padding: 10px 20px; 
+                    border: none; 
+                    cursor: pointer; 
+                    margin: 5px; 
+                    border-radius: 5px; 
+                    font-weight: 500; 
+                    transition: all 0.2s; 
+                }
+                .btn-success { background: #28a745; color: white; } 
+                .btn-success:hover { background: #218838; }
+                .btn-warning { background: #ffc107; color: #856404; } 
+                .btn-warning:hover { background: #e0a800; }
+                .btn-danger { background: #dc3545; color: white; } 
+                .btn-danger:hover { background: #c82333; }
+                .btn-info { background: #17a2b8; color: white; } 
+                .btn-info:hover { background: #138496; }
+                .btn-primary { background: #007bff; color: white; } 
+                .btn-primary:hover { background: #0056b3; }
+                .btn-secondary { background: #6c757d; color: white; }
+                .btn-secondary:hover { background: #545b62; }
+                .alert { 
+                    padding: 15px; 
+                    margin: 15px 0; 
+                    border-radius: 5px; 
+                    border: 1px solid transparent; 
+                }
                 .alert-success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
                 .alert-info { background: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
                 .alert-warning { background: #fff3cd; border-color: #ffeaa7; color: #856404; }
                 .alert-danger { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
-                .form-control, .form-select { border-radius: 5px; border: 1px solid #ced4da; padding: 8px 12px; }
-                pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; border: 1px solid #e9ecef; }
-                .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+                .form-control, .form-select { 
+                    border-radius: 5px; 
+                    border: 1px solid #ced4da; 
+                    padding: 8px 12px; 
+                }
+                .status-badge { 
+                    padding: 4px 8px; 
+                    border-radius: 12px; 
+                    font-size: 12px; 
+                    font-weight: bold; 
+                }
                 .status-ready { background: #d4edda; color: #155724; }
                 .status-loading { background: #fff3cd; color: #856404; }
                 .status-error { background: #f8d7da; color: #721c24; }
+                .optimization-info {
+                    background: #e7f3ff;
+                    border: 1px solid #b8daff;
+                    border-radius: 4px;
+                    padding: 8px;
+                    margin: 8px 0;
+                    font-size: 0.9em;
+                }
+                .metrics-info {
+                    background: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 4px;
+                    padding: 6px;
+                    font-size: 0.8em;
+                    color: #6c757d;
+                }
+                .loading-spinner {
+                    display: inline-block;
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid #f3f3f3;
+                    border-top: 2px solid #007bff;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin-right: 8px;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                
+                /* ✅ MARKDOWN RENDERING STYLES */
+                #aiResponse {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                }
+                #aiResponse h1, #aiResponse h2, #aiResponse h3, #aiResponse h4, #aiResponse h5, #aiResponse h6 {
+                    color: #2c3e50;
+                    margin-top: 1.5em;
+                    margin-bottom: 0.5em;
+                    font-weight: 600;
+                }
+                #aiResponse h1 { font-size: 1.8em; border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }
+                #aiResponse h2 { font-size: 1.5em; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; }
+                #aiResponse h3 { font-size: 1.3em; color: #34495e; }
+                #aiResponse h4 { font-size: 1.1em; color: #34495e; }
+                #aiResponse ul, #aiResponse ol {
+                    margin: 1em 0;
+                    padding-left: 2em;
+                }
+                #aiResponse li {
+                    margin: 0.5em 0;
+                }
+                #aiResponse p {
+                    margin: 1em 0;
+                    text-align: justify;
+                }
+                #aiResponse strong {
+                    color: #2c3e50;
+                    font-weight: 600;
+                }
+                #aiResponse em {
+                    color: #7f8c8d;
+                    font-style: italic;
+                }
+                #aiResponse blockquote {
+                    border-left: 4px solid #3498db;
+                    margin: 1.5em 0;
+                    padding: 0.5em 0 0.5em 1em;
+                    background-color: #ecf0f1;
+                    font-style: italic;
+                }
+                #aiResponse code {
+                    background-color: #f8f9fa;
+                    padding: 0.2em 0.4em;
+                    border-radius: 3px;
+                    font-family: 'Courier New', monospace;
+                    color: #e74c3c;
+                }
+                #aiResponse pre {
+                    background-color: #2c3e50;
+                    color: #ecf0f1;
+                    padding: 1em;
+                    border-radius: 5px;
+                    overflow-x: auto;
+                    margin: 1.5em 0;
+                }
+                #aiResponse pre code {
+                    background: none;
+                    color: inherit;
+                    padding: 0;
+                }
+                #aiResponse table {
+                    border-collapse: collapse;
+                    width: 100%;
+                    margin: 1.5em 0;
+                }
+                #aiResponse th, #aiResponse td {
+                    border: 1px solid #bdc3c7;
+                    padding: 0.75em;
+                    text-align: left;
+                }
+                #aiResponse th {
+                    background-color: #ecf0f1;
+                    font-weight: 600;
+                    color: #2c3e50;
+                }
             </style>
         </head>
         <body>
@@ -984,17 +1229,17 @@ Please provide detailed content for each section:"""
                 <!-- Header -->
                 <div class="card">
                     <div class="card-header">
-                        <h1>🏥 PulseQuery AI - Complete Medical System</h1>
-                        <p class="mb-0">Advanced Medical AI with GPU Support, Document Processing & Medical Embeddings</p>
+                        <h1>🏥 PulseQuery AI - Milestone 5: Prompt Optimization</h1>
+                        <p class="mb-0">Advanced Medical AI with English Prompt Optimization System & Markdown Rendering</p>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Version:</strong> 2.0 with MedEmbed Integration</p>
+                            <p><strong>Milestone:</strong> 5 - English Prompt Optimization</p>
                             <p><strong>Status:</strong> <span id="systemStatus" class="status-badge">Checking...</span></p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Features:</strong> GPU Acceleration, Medical Embeddings, RAG System</p>
-                            <p><strong>Model:</strong> MedGemma 4B + Medical Document Processing</p>
+                            <p><strong>Features:</strong> Query Classification, Medical Specialization, Patient Info Extraction</p>
+                            <p><strong>Enhancement:</strong> Template-based Medical Prompt Engineering + Markdown Rendering</p>
                         </div>
                     </div>
                 </div>
@@ -1016,6 +1261,14 @@ Please provide detailed content for each section:"""
                         </div>
                         <div class="col-md-3">
                             <button class="btn btn-info w-100" onclick="checkRAG()">🔍 RAG System</button>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <button class="btn btn-warning w-100" onclick="checkOptimizerStatus()">🧠 Debug Optimizer</button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-secondary w-100" onclick="clearResults()">🗑️ Clear Results</button>
                         </div>
                     </div>
                     <div id="systemResults" class="mt-3"></div>
@@ -1054,11 +1307,82 @@ Please provide detailed content for each section:"""
                     <small class="text-muted mt-2">Demo Passwords: password123, admin123, nurse123, resident123</small>
                 </div>
 
-                <!-- Document Upload (Medical Records) -->
+                <!-- ✅ MILESTONE 5: Interactive Prompt Optimization Workflow -->
+                <div class="card" id="promptOptimizationCard" style="display: none;">
+                    <div class="card-header">
+                        <h5>🧠 Milestone 5: Interactive Prompt Optimization Workflow</h5>
+                        <small>Enter Query → System Optimizes → Review/Edit → Generate AI Response (with Markdown Rendering)</small>
+                    </div>
+                    
+                    <!-- Step 1: User Query Input -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>Step 1: Enter Medical Query</strong></label>
+                        <textarea id="userQuery" class="form-control" rows="4" 
+                                  placeholder="Enter your medical query here...&#10;&#10;Examples:&#10;• Patient Name: Rogers, Pamela, Age: 56, Chief Complaint: Chest pain and shortness of breath&#10;• 45-year-old male with diabetes presenting with foot ulcer&#10;• Patient with history of hypertension needs treatment plan review"></textarea>
+                        <div class="mt-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="useContext" checked>
+                                <label class="form-check-label" for="useContext">
+                                    Use document context for optimization (recommended)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-primary btn-lg" onclick="optimizePrompt()">
+                                🔍 Optimize Prompt
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Optimized Prompt Display & Editing -->
+                    <div id="optimizedPromptSection" style="display: none;">
+                        <hr>
+                        <label class="form-label"><strong>Step 2: Review & Edit Optimized Prompt</strong></label>
+                        <div class="optimization-info" id="optimizationInfo"></div>
+                        <textarea id="optimizedPrompt" class="form-control" rows="15" 
+                                  placeholder="Optimized prompt will appear here..."></textarea>
+                        
+                        <div class="mt-3">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <button class="btn btn-success btn-lg" onclick="generateFromPrompt()">
+                                        🤖 Generate AI Response (Markdown Rendered)
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="resetOptimization()">
+                                        🔄 Start Over
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="metrics-info" id="promptMetrics"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3: AI Response Display with Markdown Rendering -->
+                    <div id="aiResponseSection" style="display: none;">
+                        <hr>
+                        <label class="form-label"><strong>Step 3: AI Generated Medical Response (Markdown Rendered)</strong></label>
+                        <div id="aiResponse" class="alert alert-success"></div>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="text-muted">
+                                    <small id="generationInfo"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-info btn-sm" onclick="copyResponse()">📋 Copy Original Markdown</button>
+                                <button class="btn btn-primary btn-sm" onclick="resetForNew()">✨ New Query</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Upload -->
                 <div class="card" id="uploadCard" style="display: none;">
                     <div class="card-header">
                         <h5>📄 Medical Document Upload</h5>
-                        <small>Upload patient records, clinical protocols, or research papers for AI analysis</small>
+                        <small>Upload patient records for AI analysis (Write permission required)</small>
                     </div>
                     <form id="uploadForm">
                         <div class="row">
@@ -1073,80 +1397,28 @@ Please provide detailed content for each section:"""
                                     <option value="protocol">🔬 Clinical Protocol</option>
                                     <option value="guideline">📚 Medical Guideline</option>
                                     <option value="research">🧪 Research Paper</option>
-                                    <option value="report">📊 Lab Report</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Language:</label>
                                 <select class="form-select" id="docLanguage">
                                     <option value="en">🇺🇸 English</option>
-                                    <option value="es">🇪🇸 Spanish</option>
-                                    <option value="fr">🇫🇷 French</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">&nbsp;</label>
-                                <button type="submit" class="btn btn-primary w-100">📤 Upload & Process</button>
+                                <button type="submit" class="btn btn-primary w-100">📤 Upload</button>
                             </div>
                         </div>
                     </form>
                     <div id="uploadResult" class="mt-3" style="display: none;"></div>
                 </div>
 
-                <!-- Document Search -->
-                <div class="card" id="searchCard" style="display: none;">
-                    <div class="card-header">
-                        <h5>🔍 Medical Document Search</h5>
-                        <small>Search uploaded documents using medical-specialized AI embeddings</small>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-8">
-                            <input type="text" class="form-control" id="searchQuery" placeholder="Enter medical search query (e.g., 'diabetes management', 'chest pain symptoms')..." value="diabetes symptoms and treatment">
-                        </div>
-                        <div class="col-md-2">
-                            <input type="number" class="form-control" id="maxResults" value="5" min="1" max="10" placeholder="Max results">
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-info w-100" onclick="searchDocuments()">🔍 Search</button>
-                        </div>
-                    </div>
-                    <div id="searchResults" class="mt-3" style="display: none;"></div>
-                </div>
-
-                <!-- AI Generation Testing -->
-                <div class="card" id="generationCard" style="display: none;">
-                    <div class="card-header">
-                        <h5>🧠 Medical AI Generation</h5>
-                        <small>Test medical report generation with and without document context</small>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-8">
-                            <label class="form-label">Medical Prompt:</label>
-                            <textarea id="promptText" class="form-control" rows="3" placeholder="Enter medical prompt...">Patient Name: Rogers, Pamela
-Chief Complaint: Chest pain and shortness of breath</textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Generation Settings:</label>
-                            <input type="number" id="maxTokens" class="form-control mb-2" value="600" min="100" max="800" placeholder="Max Tokens">
-                            <input type="number" id="temperature" class="form-control" value="0.3" min="0.1" max="1.0" step="0.1" placeholder="Temperature">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <button class="btn btn-info" onclick="testSimpleGeneration()">🧪 Simple Generation</button>
-                            <button class="btn btn-success" onclick="testRAGGeneration()">🔬 RAG-Enhanced Generation</button>
-                            <button class="btn btn-warning" onclick="searchAndGenerate()">🔍➕🧠 Search + Generate</button>
-                            <button class="btn btn-danger" onclick="clearResults()">🗑️ Clear Results</button>
-                        </div>
-                    </div>
-                    <div id="generationResults" class="mt-3"></div>
-                </div>
-
                 <!-- Footer -->
                 <div class="card">
                     <div class="text-center">
-                        <p class="mb-2"><strong>PulseQuery AI</strong> - Advanced Medical AI System</p>
-                        <p class="mb-0 text-muted">Powered by MedGemma 4B, Medical Embeddings, and RAG Technology</p>
+                        <p class="mb-2"><strong>PulseQuery AI - Milestone 5</strong> - English Prompt Optimization System with Markdown Rendering</p>
+                        <p class="mb-0 text-muted">Advanced Medical AI with Interactive Template-based Prompt Engineering</p>
                     </div>
                 </div>
             </div>
@@ -1157,9 +1429,16 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
                 let sessionId = null;
 
                 document.addEventListener('DOMContentLoaded', function() {
-                    console.log('🏥 PulseQuery AI Complete Medical System Loading...');
+                    console.log('🏥 PulseQuery AI Milestone 5 Loading...');
                     updateSystemStatus();
-                    checkHealth(); // Initial health check
+                    checkHealth();
+                    
+                    // Add Enter key support for password field
+                    document.getElementById('password').addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            login();
+                        }
+                    });
                 });
 
                 function updateSystemStatus() {
@@ -1187,6 +1466,7 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
                             '<div class="alert alert-success">' +
                             '<h6>✅ Connection Test Successful</h6>' +
                             '<p><strong>Message:</strong> ' + data.message + '</p>' +
+                            '<p><strong>Milestone:</strong> ' + data.milestone + '</p>' +
                             '<p><strong>Timestamp:</strong> ' + new Date(data.timestamp).toLocaleString() + '</p>' +
                             '</div>';
                     })
@@ -1197,7 +1477,7 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
                 }
 
                 function checkHealth() {
-                    document.getElementById('systemResults').innerHTML = '<div class="alert alert-info">🔄 Performing comprehensive health check...</div>';
+                    document.getElementById('systemResults').innerHTML = '<div class="alert alert-info">🔄 Performing health check...</div>';
                     fetch('/health')
                     .then(response => response.json())
                     .then(data => {
@@ -1239,8 +1519,7 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
                         html += '<p><strong>Status:</strong> ' + data.status + '</p>';
                         html += '<p><strong>Progress:</strong> ' + (data.progress || 0) + '%</p>';
                         html += '<p><strong>Device:</strong> ' + (data.device || 'Unknown') + '</p>';
-                        html += '<p><strong>GPU Support:</strong> ' + (data.gpu_support || 'Unknown') + '</p>';
-                        html += '<p><strong>Model File:</strong> ' + (data.model_file || 'Unknown') + '</p>';
+                        html += '<p><strong>Milestone:</strong> ' + (data.milestone || 'Unknown') + '</p>';
                         html += '</div>';
                         document.getElementById('systemResults').innerHTML = html;
                     })
@@ -1261,11 +1540,8 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
                                 html += '<p><strong>' + key.replace('_', ' ') + ':</strong> ' + value + '</p>';
                             });
                         }
-                        if (data.embedding_info) {
-                            html += '<h6 class="mt-3">🧠 Embedding Information</h6>';
-                            Object.entries(data.embedding_info).forEach(([key, value]) => {
-                                html += '<p><strong>' + key + ':</strong> ' + value + '</p>';
-                            });
+                        if (data.prompt_optimizer) {
+                            html += '<p><strong>Prompt Optimizer:</strong> ' + data.prompt_optimizer + '</p>';
                         }
                         html += '</div>';
                         document.getElementById('systemResults').innerHTML = html;
@@ -1274,6 +1550,33 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
                         document.getElementById('systemResults').innerHTML = 
                             '<div class="alert alert-danger"><h6>❌ RAG Check Failed</h6><p>' + error + '</p></div>';
                     });
+                }
+
+                function checkOptimizerStatus() {
+                    if (!sessionId) {
+                        alert('Please login first to check optimizer status');
+                        return;
+                    }
+                    
+                    document.getElementById('systemResults').innerHTML = '<div class="alert alert-info">🔄 Checking prompt optimizer status...</div>';
+                    fetch('/api/debug/optimizer-status', {
+                        headers: { 'X-Session-ID': sessionId }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        let html = '<div class="alert alert-warning"><h6>🧠 Prompt Optimizer Debug Status</h6>';
+                        html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                        html += '</div>';
+                        document.getElementById('systemResults').innerHTML = html;
+                    })
+                    .catch(error => {
+                        document.getElementById('systemResults').innerHTML = 
+                            '<div class="alert alert-danger"><h6>❌ Optimizer Debug Failed</h6><p>' + error + '</p></div>';
+                    });
+                }
+
+                function clearResults() {
+                    document.getElementById('systemResults').innerHTML = '';
                 }
 
                 function login() {
@@ -1298,10 +1601,10 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
                             document.getElementById('loginStatus').innerHTML = 
                                 '<strong>Logged in as:</strong><br>' + data.user.name + '<br><small>(' + data.user.role + ')</small>';
                             
-                            // Show appropriate components based on permissions
-                            document.getElementById('searchCard').style.display = 'block';
-                            document.getElementById('generationCard').style.display = 'block';
+                            // Show prompt optimization section
+                            document.getElementById('promptOptimizationCard').style.display = 'block';
                             
+                            // Show upload card if user has write permissions
                             if (data.user.permissions && data.user.permissions.includes('write')) {
                                 document.getElementById('uploadCard').style.display = 'block';
                             }
@@ -1324,10 +1627,219 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
                         currentUser = null;
                         sessionId = null;
                         document.getElementById('loginStatus').innerHTML = 'Not logged in';
+                        document.getElementById('promptOptimizationCard').style.display = 'none';
                         document.getElementById('uploadCard').style.display = 'none';
-                        document.getElementById('searchCard').style.display = 'none';
-                        document.getElementById('generationCard').style.display = 'none';
+                        resetOptimization();
                         alert('✅ Logged out successfully');
+                    });
+                }
+
+                // ✅ MILESTONE 5: Interactive Prompt Optimization Functions
+                function optimizePrompt() {
+                    const query = document.getElementById('userQuery').value.trim();
+                    const useContext = document.getElementById('useContext').checked;
+                    
+                    if (!query) {
+                        alert('Please enter a medical query first');
+                        return;
+                    }
+                    
+                    if (!sessionId) {
+                        alert('Please login first');
+                        return;
+                    }
+                    
+                    // Show loading
+                    document.getElementById('optimizedPromptSection').style.display = 'none';
+                    document.getElementById('aiResponseSection').style.display = 'none';
+                    
+                    const loadingDiv = document.createElement('div');
+                    loadingDiv.id = 'optimizationLoading';
+                    loadingDiv.className = 'alert alert-info';
+                    loadingDiv.innerHTML = '<div class="loading-spinner"></div>🔄 Analyzing query and optimizing prompt with English medical AI...';
+                    document.getElementById('promptOptimizationCard').appendChild(loadingDiv);
+                    
+                    // ✅ FIX: Add proper headers with session ID
+                    fetch('/api/prompt/optimize', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Session-ID': sessionId
+                        },
+                        body: JSON.stringify({
+                            query: query,
+                            use_context: useContext
+                        })
+                    })
+                    .then(response => {
+                        console.log('📊 Optimization response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('📊 Optimization response data:', data);
+                        
+                        // Remove loading
+                        const loading = document.getElementById('optimizationLoading');
+                        if (loading) loading.remove();
+                        
+                        if (data.success) {
+                            // Show optimized prompt
+                            document.getElementById('optimizedPrompt').value = data.optimized_prompt;
+                            
+                            // Show optimization info
+                            const patientName = data.patient_info.name || 'Not specified';
+                            const patientAge = data.patient_info.age ? data.patient_info.age + ' years old' : 'Age not specified';
+                            const chiefComplaint = data.patient_info.chief_complaint || 'Not specified';
+                            
+                            document.getElementById('optimizationInfo').innerHTML = 
+                                `<strong>🔍 Query Analysis Results:</strong><br>` +
+                                `<strong>Query Type:</strong> ${data.query_type} | ` +
+                                `<strong>Medical Specialty:</strong> ${data.medical_specialty} | ` +
+                                `<strong>Context Docs Used:</strong> ${data.context_docs_used}<br>` +
+                                `<strong>Patient:</strong> ${patientName} (${patientAge}) | ` +
+                                `<strong>Chief Complaint:</strong> ${chiefComplaint}`;
+                            
+                            document.getElementById('promptMetrics').innerHTML = 
+                                `<strong>📊 Prompt Quality Metrics:</strong><br>` +
+                                `Length: ${data.metrics.length} chars<br>` +
+                                `Est. Tokens: ~${data.metrics.token_estimate}<br>` +
+                                `Patient Info: ${(data.metrics.patient_specificity * 100).toFixed(0)}%<br>` +
+                                `Medical Terms: ${(data.metrics.medical_terminology_density * 100).toFixed(0)}%<br>` +
+                                `Context Use: ${(data.metrics.context_utilization * 100).toFixed(0)}%`;
+                            
+                            document.getElementById('optimizedPromptSection').style.display = 'block';
+                            document.getElementById('optimizedPromptSection').scrollIntoView({ behavior: 'smooth' });
+                            
+                            // Show fallback warning if applicable
+                            if (data.fallback_used) {
+                                alert('⚠️ Note: Optimization used fallback mode due to: ' + (data.optimization_error || 'Unknown error'));
+                            }
+                            
+                        } else {
+                            alert('❌ Optimization failed: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Optimization error:', error);
+                        const loading = document.getElementById('optimizationLoading');
+                        if (loading) loading.remove();
+                        alert('❌ Optimization error: ' + error.message);
+                    });
+                }
+
+                // ✅ ENHANCED: Generate with MARKDOWN RENDERING
+                function generateFromPrompt() {
+                    const finalPrompt = document.getElementById('optimizedPrompt').value.trim();
+                    
+                    if (!finalPrompt) {
+                        alert('Please provide a prompt for generation');
+                        return;
+                    }
+                    
+                    if (!sessionId) {
+                        alert('Please login first');
+                        return;
+                    }
+                    
+                    // Show loading state
+                    document.getElementById('aiResponseSection').style.display = 'none';
+                    
+                    const loadingDiv = document.createElement('div');
+                    loadingDiv.id = 'generationLoading';
+                    loadingDiv.className = 'alert alert-warning';
+                    loadingDiv.innerHTML = '<div class="loading-spinner"></div>🤖 Generating AI response from optimized prompt with markdown rendering...';
+                    
+                    const promptCard = document.getElementById('promptOptimizationCard');
+                    promptCard.appendChild(loadingDiv);
+                    loadingDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    fetch('/api/prompt/generate-final', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Session-ID': sessionId
+                        },
+                        body: JSON.stringify({
+                            final_prompt: finalPrompt,
+                            max_tokens: 600,
+                            temperature: 0.3
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const loading = document.getElementById('generationLoading');
+                        if (loading) loading.remove();
+                        
+                        if (data.success) {
+                            // ✅ RENDER MARKDOWN: Convert markdown to HTML
+                            const markdownText = data.ai_response;
+                            const htmlContent = marked.parse(markdownText);
+                            const responseElement = document.getElementById('aiResponse');
+                            
+                            // Set the HTML content and store original markdown for copying
+                            responseElement.innerHTML = htmlContent;
+                            responseElement.setAttribute('data-original-markdown', markdownText);
+                            
+                            // Show generation info
+                            document.getElementById('generationInfo').innerHTML = 
+                                `<strong>📊 Generation Info:</strong> ` +
+                                `Response: ${data.generation_info.response_length} chars | ` +
+                                `Device: ${data.generation_info.device} | ` +
+                                `Generated: ${new Date(data.timestamp).toLocaleTimeString()} | ` +
+                                `Milestone: ${data.milestone} | ` +
+                                `Format: Rendered Markdown ✅`;
+                            
+                            document.getElementById('aiResponseSection').style.display = 'block';
+                            document.getElementById('aiResponseSection').scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'start' 
+                            });
+                            
+                        } else {
+                            alert('❌ Generation failed: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        const loading = document.getElementById('generationLoading');
+                        if (loading) loading.remove();
+                        alert('❌ Generation error: ' + error);
+                    });
+                }
+
+                function resetOptimization() {
+                    document.getElementById('userQuery').value = '';
+                    document.getElementById('optimizedPromptSection').style.display = 'none';
+                    document.getElementById('aiResponseSection').style.display = 'none';
+                    
+                    // Remove any loading indicators
+                    const loadingElements = document.querySelectorAll('#optimizationLoading, #generationLoading');
+                    loadingElements.forEach(el => el.remove());
+                    
+                    // Scroll back to top of form
+                    document.getElementById('userQuery').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    document.getElementById('userQuery').focus();
+                }
+
+                function resetForNew() {
+                    resetOptimization();
+                }
+
+                // ✅ ENHANCED: Copy original markdown text
+                function copyResponse() {
+                    const responseElement = document.getElementById('aiResponse');
+                    const originalMarkdown = responseElement.getAttribute('data-original-markdown');
+                    const textToCopy = originalMarkdown || responseElement.textContent;
+                    
+                    navigator.clipboard.writeText(textToCopy).then(function() {
+                        alert('✅ Response copied to clipboard (original markdown format)!');
+                    }).catch(function(err) {
+                        alert('❌ Could not copy response: ' + err);
                     });
                 }
 
@@ -1355,17 +1867,12 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
                     formData.append('language', docLanguage);
                     
                     document.getElementById('uploadResult').innerHTML = 
-                        '<div class="alert alert-info">' +
-                        '<h6>📤 Processing Medical Document...</h6>' +
-                        '<p>Uploading and analyzing with medical AI embeddings...</p>' +
-                        '</div>';
+                        '<div class="alert alert-info"><h6>📤 Processing...</h6><p>Uploading and analyzing with medical embeddings...</p></div>';
                     document.getElementById('uploadResult').style.display = 'block';
                     
                     fetch('/api/rag/upload', {
                         method: 'POST',
-                        headers: {
-                            'X-Session-ID': sessionId
-                        },
+                        headers: { 'X-Session-ID': sessionId },
                         body: formData
                     })
                     .then(response => response.json())
@@ -1373,250 +1880,22 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
                         if (data.success) {
                             document.getElementById('uploadResult').innerHTML = 
                                 '<div class="alert alert-success">' +
-                                '<h6>✅ Medical Document Processed Successfully!</h6>' +
-                                '<div class="row">' +
-                                '<div class="col-md-6">' +
-                                '<p><strong>📄 File:</strong> ' + (data.original_filename || 'Unknown') + '</p>' +
-                                '<p><strong>📊 Chunks Created:</strong> ' + (data.chunks_created || 0) + '</p>' +
-                                '<p><strong>🔬 Document Type:</strong> ' + (data.doc_type || 'medical') + '</p>' +
-                                '</div>' +
-                                '<div class="col-md-6">' +
-                                '<p><strong>👤 Uploaded by:</strong> ' + (data.uploaded_by || currentUser.name) + '</p>' +
-                                '<p><strong>🧠 Processing Method:</strong> ' + (data.processing_method || 'Standard') + '</p>' +
-                                '<p><strong>🌐 Language:</strong> ' + (data.language || 'en') + '</p>' +
-                                '</div>' +
-                                '</div>' +
+                                '<h6>✅ Document Processed Successfully!</h6>' +
+                                '<p><strong>File:</strong> ' + (data.original_filename || 'Unknown') + '</p>' +
+                                '<p><strong>Chunks:</strong> ' + (data.chunks_created || 0) + '</p>' +
+                                '<p><strong>Milestone:</strong> ' + (data.milestone || 'Unknown') + '</p>' +
                                 '</div>';
-                            
-                            // Reset form
                             fileInput.value = '';
                         } else {
                             document.getElementById('uploadResult').innerHTML = 
-                                '<div class="alert alert-danger">' +
-                                '<h6>❌ Upload Failed</h6>' +
-                                '<p><strong>Error:</strong> ' + (data.error || 'Unknown error') + '</p>' +
-                                (data.debug ? '<details><summary>Debug Info</summary><pre>' + JSON.stringify(data.debug, null, 2) + '</pre></details>' : '') +
-                                '</div>';
+                                '<div class="alert alert-danger"><h6>❌ Upload Failed</h6><p>' + (data.error || 'Unknown error') + '</p></div>';
                         }
                     })
                     .catch(error => {
                         document.getElementById('uploadResult').innerHTML = 
-                            '<div class="alert alert-danger">' +
-                            '<h6>❌ Upload Error</h6>' +
-                            '<p>' + error + '</p>' +
-                            '</div>';
+                            '<div class="alert alert-danger"><h6>❌ Upload Error</h6><p>' + error + '</p></div>';
                     });
                 });
-
-                function searchDocuments() {
-                    if (!sessionId) { alert('Please login first'); return; }
-                    
-                    const query = document.getElementById('searchQuery').value;
-                    const maxResults = parseInt(document.getElementById('maxResults').value);
-                    
-                    if (!query.trim()) {
-                        alert('Please enter a search query');
-                        return;
-                    }
-                    
-                    document.getElementById('searchResults').innerHTML = 
-                        '<div class="alert alert-info"><h6>🔍 Searching medical documents...</h6><p>Using medical-specialized embeddings...</p></div>';
-                    document.getElementById('searchResults').style.display = 'block';
-                    
-                    fetch('/api/rag/search', {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'X-Session-ID': sessionId 
-                        },
-                        body: JSON.stringify({ query: query, max_docs: maxResults })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        const resultsDiv = document.getElementById('searchResults');
-                        if (data.results_count > 0) {
-                            let html = '<div class="alert alert-success">';
-                            html += '<h6>✅ Found ' + data.results_count + ' relevant medical documents</h6>';
-                            html += '<p><strong>Query:</strong> ' + data.query + '</p>';
-                            html += '<p><strong>Search Type:</strong> ' + (data.search_type || 'Semantic') + '</p>';
-                            html += '</div>';
-                            
-                            data.results.forEach((result, index) => {
-                                const relevancePercent = Math.round(result.similarity * 100);
-                                const relevanceClass = relevancePercent > 70 ? 'success' : relevancePercent > 40 ? 'warning' : 'secondary';
-                                
-                                html += '<div class="card mb-3">';
-                                html += '<div class="card-header d-flex justify-content-between align-items-center">';
-                                html += '<h6 class="mb-0">📄 Document ' + (index + 1) + '</h6>';
-                                html += '<span class="badge bg-' + relevanceClass + '">' + relevancePercent + '% Relevant</span>';
-                                html += '</div>';
-                                html += '<div class="card-body">';
-                                html += '<p class="card-text">' + result.text.substring(0, 300) + '...</p>';
-                                html += '<div class="row">';
-                                html += '<div class="col-md-6">';
-                                html += '<small class="text-muted"><strong>File:</strong> ' + (result.metadata.file_name || 'Unknown') + '</small><br>';
-                                html += '<small class="text-muted"><strong>Type:</strong> ' + (result.metadata.doc_type || 'medical') + '</small>';
-                                html += '</div>';
-                                html += '<div class="col-md-6">';
-                                html += '<small class="text-muted"><strong>Chunk:</strong> ' + (result.metadata.chunk_index || 0) + '/' + (result.metadata.total_chunks || 1) + '</small><br>';
-                                html += '<small class="text-muted"><strong>Similarity:</strong> ' + result.similarity.toFixed(3) + '</small>';
-                                html += '</div>';
-                                html += '</div>';
-                                html += '</div>';
-                                html += '</div>';
-                            });
-                            
-                            resultsDiv.innerHTML = html;
-                        } else {
-                            resultsDiv.innerHTML = '<div class="alert alert-warning"><h6>⚠️ No relevant documents found</h6><p>Try different search terms or upload more documents.</p></div>';
-                        }
-                    })
-                    .catch(error => {
-                        document.getElementById('searchResults').innerHTML = 
-                            '<div class="alert alert-danger"><h6>❌ Search Failed</h6><p>' + error + '</p></div>';
-                    });
-                }
-
-                function testSimpleGeneration() {
-                    if (!sessionId) { alert('Please login first'); return; }
-                    
-                    const prompt = document.getElementById('promptText').value;
-                    document.getElementById('generationResults').innerHTML = 
-                        '<div class="alert alert-info"><h6>🧪 Testing simple medical generation...</h6><p>Generating without document context...</p></div>';
-                    
-                    fetch('/api/medgemma/generate-simple', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json', 'X-Session-ID': sessionId},
-                        body: JSON.stringify({prompt: prompt})
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.result.generated_text) {
-                            document.getElementById('generationResults').innerHTML = 
-                                '<div class="alert alert-success">' +
-                                '<h6>✅ Simple Generation Successful</h6>' +
-                                '<div class="row mb-3">' +
-                                '<div class="col-md-6"><strong>Length:</strong> ' + data.result.generated_text.length + ' characters</div>' +
-                                '<div class="col-md-6"><strong>Generated by:</strong> ' + (data.generated_by || 'AI') + '</div>' +
-                                '</div>' +
-                                '<div class="card">' +
-                                '<div class="card-header"><strong>Generated Medical Report:</strong></div>' +
-                                '<div class="card-body"><pre>' + data.result.generated_text + '</pre></div>' +
-                                '</div>' +
-                                '</div>';
-                        } else {
-                            document.getElementById('generationResults').innerHTML = 
-                                '<div class="alert alert-warning"><h6>⚠️ Empty Generation Response</h6><p>The model returned an empty response. Try adjusting the prompt.</p></div>';
-                        }
-                    })
-                    .catch(error => {
-                        document.getElementById('generationResults').innerHTML = 
-                            '<div class="alert alert-danger"><h6>❌ Simple Generation Failed</h6><p>' + error + '</p></div>';
-                    });
-                }
-
-                function testRAGGeneration() {
-                    if (!sessionId) { alert('Please login first'); return; }
-                    
-                    const prompt = document.getElementById('promptText').value;
-                    const maxTokens = parseInt(document.getElementById('maxTokens').value);
-                    const temperature = parseFloat(document.getElementById('temperature').value);
-                    
-                    document.getElementById('generationResults').innerHTML = 
-                        '<div class="alert alert-info"><h6>🔬 Testing RAG-enhanced medical generation...</h6><p>Searching documents and generating with medical context...</p></div>';
-                    
-                    fetch('/api/medgemma/generate-with-rag', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json', 'X-Session-ID': sessionId},
-                        body: JSON.stringify({
-                            prompt: prompt,
-                            max_tokens: maxTokens,
-                            temperature: temperature,
-                            use_rag: true
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.result.generated_text) {
-                            document.getElementById('generationResults').innerHTML = 
-                                '<div class="alert alert-success">' +
-                                '<h6>✅ RAG-Enhanced Generation Successful</h6>' +
-                                '<div class="row mb-3">' +
-                                '<div class="col-md-4"><strong>Length:</strong> ' + data.result.generated_text.length + ' chars</div>' +
-                                '<div class="col-md-4"><strong>Context Docs:</strong> ' + data.context_docs_used + '</div>' +
-                                '<div class="col-md-4"><strong>Good Docs:</strong> ' + (data.debug_info.good_docs_count || 0) + '</div>' +
-                                '</div>' +
-                                '<div class="card mb-3">' +
-                                '<div class="card-header"><strong>Medical AI Generated Report (with RAG context):</strong></div>' +
-                                '<div class="card-body"><pre>' + data.result.generated_text + '</pre></div>' +
-                                '</div>' +
-                                '<details>' +
-                                '<summary>🔧 Generation Details</summary>' +
-                                '<div class="mt-2">' +
-                                '<p><strong>Input Tokens:</strong> ' + data.debug_info.estimated_input_tokens + '</p>' +
-                                '<p><strong>Similarity Scores:</strong> ' + JSON.stringify(data.debug_info.similarity_scores) + '</p>' +
-                                '<p><strong>Medical Context:</strong> ' + (data.medical_context ? 'Yes' : 'No') + '</p>' +
-                                '</div>' +
-                                '</details>' +
-                                '</div>';
-                        } else {
-                            let debugInfo = '';
-                            if (data.debug_info) {
-                                debugInfo = '<div class="mt-3">' +
-                                           '<p><strong>Debug Info:</strong></p>' +
-                                           '<p>Input tokens: ' + data.debug_info.estimated_input_tokens + '</p>' +
-                                           '<p>Good docs: ' + data.debug_info.good_docs_count + '</p>' +
-                                           '<p>Similarities: ' + JSON.stringify(data.debug_info.similarity_scores) + '</p>' +
-                                           '</div>';
-                            }
-                            document.getElementById('generationResults').innerHTML = 
-                                '<div class="alert alert-warning"><h6>⚠️ Empty RAG Response</h6><p>No content was generated. This might be due to insufficient context or model issues.</p>' + debugInfo + '</div>';
-                        }
-                    })
-                    .catch(error => {
-                        document.getElementById('generationResults').innerHTML = 
-                            '<div class="alert alert-danger"><h6>❌ RAG Generation Failed</h6><p>' + error + '</p></div>';
-                    });
-                }
-
-                function searchAndGenerate() {
-                    // First search, then generate with top results
-                    const query = document.getElementById('promptText').value;
-                    
-                    document.getElementById('generationResults').innerHTML = 
-                        '<div class="alert alert-info"><h6>🔍➕🧠 Search and Generate</h6><p>Step 1: Searching for relevant documents...</p></div>';
-                    
-                    // Perform search first
-                    fetch('/api/rag/search', {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'X-Session-ID': sessionId 
-                        },
-                        body: JSON.stringify({ query: query, max_docs: 3 })
-                    })
-                    .then(response => response.json())
-                    .then(searchData => {
-                        document.getElementById('generationResults').innerHTML = 
-                            '<div class="alert alert-info"><h6>🔍➕🧠 Search and Generate</h6><p>Step 2: Found ' + searchData.results_count + ' documents. Generating comprehensive report...</p></div>';
-                        
-                        // Then generate with RAG
-                        return testRAGGeneration();
-                    })
-                    .catch(error => {
-                        document.getElementById('generationResults').innerHTML = 
-                            '<div class="alert alert-danger"><h6>❌ Search and Generate Failed</h6><p>' + error + '</p></div>';
-                    });
-                }
-
-                function clearResults() {
-                    document.getElementById('generationResults').innerHTML = '';
-                    document.getElementById('systemResults').innerHTML = '';
-                    document.getElementById('uploadResult').innerHTML = '';
-                    document.getElementById('searchResults').innerHTML = '';
-                    document.getElementById('uploadResult').style.display = 'none';
-                    document.getElementById('searchResults').style.display = 'none';
-                }
             </script>
         </body>
         </html>
@@ -1625,20 +1904,19 @@ Chief Complaint: Chest pain and shortness of breath</textarea>
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
-        return jsonify({"error": "Endpoint not found", "milestone": 4}), 404
+        return jsonify({"error": "Endpoint not found", "milestone": 5}), 404
 
     @app.errorhandler(500)
     def internal_error(error):
-        return jsonify({"error": "Internal server error", "milestone": 4}), 500
+        return jsonify({"error": "Internal server error", "milestone": 5}), 500
 
 # Main execution
 if __name__ == '__main__':
-    logger.info("🚀 Starting PulseQuery AI - Complete Medical System")
-    logger.info("🔧 Features: GPU Support, Medical Embeddings, Document Upload")
-    logger.info("🧠 Enhanced: RAG System with Comprehensive Error Handling")
-    logger.info("📄 NEW: Complete Document Processing Pipeline")
-    logger.info("🔐 AUTH: Role-based Permissions and Session Management")
-    logger.info("🎯 UI: Complete Testing Interface with Medical Features")
+    logger.info("🚀 Starting PulseQuery AI - Milestone 5: English Prompt Optimization")
+    logger.info("🔧 Features: English Medical Prompt Optimizer, Query Classification, Medical Specialization")
+    logger.info("🧠 Enhanced: Template-based Medical Prompt Engineering")
+    logger.info("📄 NEW: Interactive Prompt Optimization Workflow with Markdown Rendering")
+    logger.info("🎯 UI: Complete English-focused Medical AI System")
     
     try:
         logger.info("\n🔄 Creating complete Flask application...")
@@ -1647,33 +1925,41 @@ if __name__ == '__main__':
         
         logger.info("\n🌐 Server Information:")
         logger.info("📍 Main Server: http://localhost:5000")
-        logger.info("🔗 Complete Test UI: http://localhost:5000/test-ui")
+        logger.info("🔗 Milestone 5 Test UI: http://localhost:5000/test-ui")
         logger.info("❤️ Health Check: http://localhost:5000/health")
         
-        logger.info("\n🧪 Available Endpoints:")
+        logger.info("\n🧪 Milestone 5 Endpoints:")
+        logger.info("   - /api/prompt/optimize - English prompt optimization")
+        logger.info("   - /api/prompt/generate-final - Generate from optimized prompt")
+        logger.info("   - /api/debug/optimizer-status - Debug optimizer status")
         logger.info("   - /api/auth/login - User authentication")
         logger.info("   - /api/rag/upload - Document upload (write permission)")
-        logger.info("   - /api/rag/search - Document search with medical embeddings")
         logger.info("   - /api/rag/stats - RAG system statistics")
-        logger.info("   - /api/medgemma/status - Model status")
-        logger.info("   - /api/medgemma/generate-simple - Simple generation")
-        logger.info("   - /api/medgemma/generate-with-rag - RAG-enhanced generation")
+        
+        logger.info("\n🎯 Milestone 5 Features:")
+        logger.info("   - English Medical Prompt Optimizer")
+        logger.info("   - Query Type Classification (7 types)")
+        logger.info("   - Medical Specialty Detection (10+ specialties)")
+        logger.info("   - Patient Information Extraction")
+        logger.info("   - Template-based Prompt Generation")
+        logger.info("   - Quality Metrics Calculation")
+        logger.info("   - Interactive UI Workflow")
+        logger.info("   - Markdown Rendering in UI ✅")
+        logger.info("   - Debug Tools for Troubleshooting")
         
         logger.info("\n👥 Demo Login Credentials:")
-        logger.info("   - doctor1 / password123 (✅ Full access + document upload)")
+        logger.info("   - doctor1 / password123 (✅ Full access)")
         logger.info("   - admin1 / admin123 (✅ Administrative access)")  
         logger.info("   - nurse1 / nurse123 (📖 Read-only access)")
         logger.info("   - resident1 / resident123 (📖 Limited access)")
         
-        logger.info("\n🔧 System Components:")
-        logger.info("   - MedGemma 4B with GPU support")
-        logger.info("   - Medical embeddings (MedEmbed/BioBERT)")
-        logger.info("   - RAG system with ChromaDB")
-        logger.info("   - Document processing (PDF, DOCX, TXT)")
-        logger.info("   - Enhanced prompt engineering")
-        logger.info("   - Complete authentication system")
+        logger.info("\n🎨 UI Enhancements:")
+        logger.info("   - Markdown rendering with marked.js library")
+        logger.info("   - Professional medical report styling")
+        logger.info("   - Headers, lists, tables, and formatting support")
+        logger.info("   - Copy original markdown functionality")
         
-        logger.info("\n🔄 Starting server with enhanced debugging...")
+        logger.info("\n🔄 Starting server...")
         
         app.run(
             debug=True,
@@ -1687,6 +1973,6 @@ if __name__ == '__main__':
         logger.info("\n🛑 Server stopped by user")
     except Exception as e:
         logger.info(f"\n❌ Server startup failed: {e}")
-        traceback.logger.info_exc()
+        traceback.print_exc()
     finally:
-        logger.info("\n✅ Shutdown complete")
+        logger.info("\n✅ Milestone 5 shutdown complete")

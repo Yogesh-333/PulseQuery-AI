@@ -39,11 +39,23 @@ class SessionManager:
         # In-memory session cache for fast access
         self.active_sessions = {}
         
-        # Load existing sessions from database
+        # ✅ FIX: Handle both ChromaDB and SQLite database types
         if self.db_manager:
-            self._load_sessions_from_db()
-        
-        self.logger.info("SessionManager initialized with ChromaDB serialization support")
+            try:
+                # Check if it's ChromaDB (has sessions_collection attribute)
+                if hasattr(self.db_manager, 'sessions_collection'):
+                    self._load_sessions_from_chromadb()
+                    self.logger.info("SessionManager initialized with ChromaDB support")
+                # Or if it's SQLite (has db_path attribute)
+                elif hasattr(self.db_manager, 'db_path'):
+                    self._load_sessions_from_sqlite()
+                    self.logger.info("SessionManager initialized with SQLite support")
+                else:
+                    self.logger.warning("Unknown database manager type, sessions will be memory-only")
+            except Exception as e:
+                self.logger.warning(f"Database initialization failed, using memory-only sessions: {e}")
+        else:
+            self.logger.info("SessionManager initialized with memory-only storage")
 
     def create_session(self, user_info: Dict) -> str:
         """Create a new session for authenticated user with proper serialization"""
@@ -67,9 +79,16 @@ class SessionManager:
             # Store in memory cache (keep original format with list permissions)
             self.active_sessions[session_id] = session_data
             
-            # Store in database with serialized format
+            # ✅ FIX: Save to appropriate database type
             if self.db_manager:
-                self._save_session_to_db(session_data)
+                try:
+                    if hasattr(self.db_manager, 'sessions_collection'):
+                        self._save_session_to_chromadb(session_data)
+                    elif hasattr(self.db_manager, 'db_path'):
+                        self._save_session_to_sqlite(session_data)
+                except Exception as db_error:
+                    self.logger.warning(f"Session DB save failed (continuing anyway): {db_error}")
+                    # Don't raise - session still works in memory
             
             self.logger.info(f"Session created for user {user_info['user_id']}: {session_id}")
             return session_id
@@ -106,7 +125,13 @@ class SessionManager:
             
             # Update in database
             if self.db_manager:
-                self._save_session_to_db(session)
+                try:
+                    if hasattr(self.db_manager, 'sessions_collection'):
+                        self._save_session_to_chromadb(session)
+                    elif hasattr(self.db_manager, 'db_path'):
+                        self._save_session_to_sqlite(session)
+                except Exception as e:
+                    self.logger.warning(f"Session update failed: {e}")
             
             return {
                 "user_id": session["user_id"],
@@ -131,7 +156,13 @@ class SessionManager:
                 
                 # Update in database
                 if self.db_manager:
-                    self._save_session_to_db(session)
+                    try:
+                        if hasattr(self.db_manager, 'sessions_collection'):
+                            self._save_session_to_chromadb(session)
+                        elif hasattr(self.db_manager, 'db_path'):
+                            self._delete_session_from_sqlite(session_id)
+                    except Exception as e:
+                        self.logger.warning(f"Session termination DB update failed: {e}")
                 
                 # Remove from active cache
                 del self.active_sessions[session_id]
@@ -190,9 +221,10 @@ class SessionManager:
         if expired_sessions:
             self.logger.info(f"Cleaned up {len(expired_sessions)} expired sessions")
 
-    def _save_session_to_db(self, session_data: Dict):
-        """Save session to database with proper serialization for ChromaDB"""
-        if not self.db_manager:
+    # ✅ ChromaDB Methods (Original)
+    def _save_session_to_chromadb(self, session_data: Dict):
+        """Save session to ChromaDB with proper serialization"""
+        if not self.db_manager or not hasattr(self.db_manager, 'sessions_collection'):
             return
         
         try:
@@ -206,14 +238,14 @@ class SessionManager:
                 ids=[serialized_session_data["session_id"]]
             )
             
-            self.logger.debug(f"Session saved to DB: {serialized_session_data['session_id']}")
+            self.logger.debug(f"Session saved to ChromaDB: {serialized_session_data['session_id']}")
             
         except Exception as e:
-            self.logger.error(f"Failed to save session to DB: {e}")
+            self.logger.error(f"Failed to save session to ChromaDB: {e}")
 
-    def _load_session_from_db(self, session_id: str) -> Optional[Dict]:
-        """Load session from database with proper deserialization"""
-        if not self.db_manager:
+    def _load_session_from_chromadb(self, session_id: str) -> Optional[Dict]:
+        """Load session from ChromaDB with proper deserialization"""
+        if not self.db_manager or not hasattr(self.db_manager, 'sessions_collection'):
             return None
         
         try:
@@ -222,16 +254,16 @@ class SessionManager:
                 session_data = results["metadatas"][0]
                 # Deserialize metadata to restore lists
                 deserialized_session_data = deserialize_metadata_from_db(session_data)
-                self.logger.debug(f"Session loaded from DB: {session_id}")
+                self.logger.debug(f"Session loaded from ChromaDB: {session_id}")
                 return deserialized_session_data
         except Exception as e:
-            self.logger.error(f"Failed to load session from DB: {e}")
+            self.logger.error(f"Failed to load session from ChromaDB: {e}")
         
         return None
 
-    def _load_sessions_from_db(self):
-        """Load all active sessions from database on startup with deserialization"""
-        if not self.db_manager:
+    def _load_sessions_from_chromadb(self):
+        """Load all active sessions from ChromaDB on startup with deserialization"""
+        if not self.db_manager or not hasattr(self.db_manager, 'sessions_collection'):
             return
         
         try:
@@ -255,13 +287,114 @@ class SessionManager:
                                 self.active_sessions[session_id] = deserialized_session_data
                                 loaded_count += 1
                         except (ValueError, KeyError) as e:
-                            self.logger.warning(f"Invalid session data in DB, skipping: {e}")
+                            self.logger.warning(f"Invalid session data in ChromaDB, skipping: {e}")
                             continue
                         
-            self.logger.info(f"Loaded {loaded_count} active sessions from database")
+            self.logger.info(f"Loaded {loaded_count} active sessions from ChromaDB")
             
         except Exception as e:
-            self.logger.error(f"Failed to load sessions from database: {e}")
+            self.logger.error(f"Failed to load sessions from ChromaDB: {e}")
+
+    # ✅ SQLite Methods (New - for compatibility)
+    def _save_session_to_sqlite(self, session_data: Dict):
+        """Save session to SQLite database"""
+        if not self.db_manager or not hasattr(self.db_manager, 'db_path'):
+            return
+            
+        try:
+            import sqlite3
+            with sqlite3.connect(self.db_manager.db_path) as conn:
+                conn.execute('''
+                    INSERT OR REPLACE INTO sessions 
+                    (session_id, user_id, created_at, last_accessed, metadata)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (
+                    session_data['session_id'],
+                    session_data['user_id'],
+                    session_data['created_at'],
+                    session_data['last_activity'],
+                    json.dumps(session_data)  # Store entire session as JSON string
+                ))
+                self.logger.debug(f"Session saved to SQLite: {session_data['session_id']}")
+        except Exception as e:
+            self.logger.warning(f"SQLite session save failed: {e}")
+
+    def _load_session_from_sqlite(self, session_id: str) -> Optional[Dict]:
+        """Load session from SQLite database"""
+        if not self.db_manager or not hasattr(self.db_manager, 'db_path'):
+            return None
+            
+        try:
+            import sqlite3
+            with sqlite3.connect(self.db_manager.db_path) as conn:
+                cursor = conn.execute('SELECT metadata FROM sessions WHERE session_id = ?', (session_id,))
+                row = cursor.fetchone()
+                if row:
+                    session_data = json.loads(row[0])
+                    self.logger.debug(f"Session loaded from SQLite: {session_id}")
+                    return session_data
+        except Exception as e:
+            self.logger.warning(f"SQLite session load failed: {e}")
+        
+        return None
+
+    def _load_sessions_from_sqlite(self):
+        """Load all active sessions from SQLite on startup"""
+        if not self.db_manager or not hasattr(self.db_manager, 'db_path'):
+            return
+            
+        try:
+            import sqlite3
+            with sqlite3.connect(self.db_manager.db_path) as conn:
+                cursor = conn.execute('SELECT metadata FROM sessions')
+                rows = cursor.fetchall()
+                
+                current_time = datetime.now(timezone.utc)
+                loaded_count = 0
+                
+                for row in rows:
+                    try:
+                        session_data = json.loads(row[0])
+                        if session_data.get("is_active"):
+                            expires_at = datetime.fromisoformat(session_data["expires_at"])
+                            if current_time < expires_at:
+                                session_id = session_data["session_id"]
+                                self.active_sessions[session_id] = session_data
+                                loaded_count += 1
+                    except Exception as e:
+                        self.logger.warning(f"Invalid session data in SQLite, skipping: {e}")
+                        continue
+                        
+                self.logger.info(f"Loaded {loaded_count} active sessions from SQLite")
+                
+        except Exception as e:
+            self.logger.error(f"Failed to load sessions from SQLite: {e}")
+
+    def _delete_session_from_sqlite(self, session_id: str):
+        """Delete session from SQLite database"""
+        if not self.db_manager or not hasattr(self.db_manager, 'db_path'):
+            return
+            
+        try:
+            import sqlite3
+            with sqlite3.connect(self.db_manager.db_path) as conn:
+                conn.execute('DELETE FROM sessions WHERE session_id = ?', (session_id,))
+                self.logger.debug(f"Session deleted from SQLite: {session_id}")
+        except Exception as e:
+            self.logger.warning(f"SQLite session delete failed: {e}")
+
+    # ✅ Generic database method (tries to determine DB type)
+    def _load_session_from_db(self, session_id: str) -> Optional[Dict]:
+        """Load session from database (ChromaDB or SQLite)"""
+        if not self.db_manager:
+            return None
+            
+        if hasattr(self.db_manager, 'sessions_collection'):
+            return self._load_session_from_chromadb(session_id)
+        elif hasattr(self.db_manager, 'db_path'):
+            return self._load_session_from_sqlite(session_id)
+        else:
+            return None
 
     def refresh_session(self, session_id: str) -> bool:
         """Refresh session expiration time"""
@@ -273,7 +406,13 @@ class SessionManager:
                 
                 # Update in database
                 if self.db_manager:
-                    self._save_session_to_db(session)
+                    try:
+                        if hasattr(self.db_manager, 'sessions_collection'):
+                            self._save_session_to_chromadb(session)
+                        elif hasattr(self.db_manager, 'db_path'):
+                            self._save_session_to_sqlite(session)
+                    except Exception as e:
+                        self.logger.warning(f"Session refresh DB update failed: {e}")
                 
                 return True
             
@@ -307,4 +446,10 @@ class SessionManager:
             self.active_sessions[session_id]["last_activity"] = datetime.now(timezone.utc).isoformat()
             # Save to database
             if self.db_manager:
-                self._save_session_to_db(self.active_sessions[session_id])
+                try:
+                    if hasattr(self.db_manager, 'sessions_collection'):
+                        self._save_session_to_chromadb(self.active_sessions[session_id])
+                    elif hasattr(self.db_manager, 'db_path'):
+                        self._save_session_to_sqlite(self.active_sessions[session_id])
+                except Exception as e:
+                    self.logger.warning(f"Session activity update failed: {e}")

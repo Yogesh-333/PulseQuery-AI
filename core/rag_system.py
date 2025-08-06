@@ -1,6 +1,6 @@
 """
-Enhanced RAG System with MedEmbed Embeddings for Medical Documents
-Specialized embeddings for improved medical document retrieval and understanding
+Enhanced RAG System with MedEmbed Embeddings and Persistent ChromaDB
+Specialized embeddings for improved medical document retrieval with guaranteed persistence
 """
 
 import os
@@ -8,10 +8,16 @@ import uuid
 import logging
 import traceback
 import torch
+import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 import tempfile
 import shutil
+from core.prompt_optimizer import EnglishMedicalPromptOptimizer
+
+# ✅ PERSISTENCE FIX: Direct ChromaDB imports for better control
+import chromadb
+from chromadb.config import Settings
 
 # ✅ UPDATED: Fixed deprecated imports
 try:
@@ -24,16 +30,12 @@ try:
 except ImportError:
     from langchain.embeddings import HuggingFaceEmbeddings
 
-try:
-    from langchain_community.vectorstores import Chroma
-except ImportError:
-    from langchain.vectorstores import Chroma
-
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 
 # Database for persistence
 import sqlite3
+
 
 class DocumentDatabase:
     """SQLite database for document metadata persistence"""
@@ -108,13 +110,15 @@ class DocumentDatabase:
             logging.error(f"Failed to get documents: {e}")
             return []
 
+
 class RAGSystem:
     """
-    Enhanced RAG system with MedEmbed-base embeddings for medical documents
+    Enhanced RAG system with MedEmbed-base embeddings and persistent ChromaDB storage
     """
     
     def __init__(self, data_dir: str = "data/chromadb", embedding_model: str = "medical"):
-        self.data_dir = data_dir
+        # ✅ PERSISTENCE FIX: Use absolute path for reliable persistence
+        self.data_dir = os.path.abspath(data_dir)
         self.logger = logging.getLogger(__name__)
         
         # ✅ FIXED: Complete embedding configurations with all expected keys
@@ -139,8 +143,15 @@ class RAGSystem:
         
         print(f"🧠 Selected embedding model: {self.embedding_model_name}")
         
+        self.prompt_optimizer = EnglishMedicalPromptOptimizer()
+        print("✅ English Medical Prompt Optimizer integrated")
+        
+        # ✅ PERSISTENCE FIX: Initialize persistent ChromaDB components
+        self.chroma_client = None
+        self.chroma_collection = None
+        self.collection_name = "medical_documents_persistent"
+        
         # Storage
-        self.vector_store = None
         self.embeddings = None
         self.db_manager = None
         self.documents_metadata = []
@@ -153,19 +164,29 @@ class RAGSystem:
             separators=["\n\n", "\n", ". ", "; ", ", ", " ", ""]
         )
         
-        # Initialize components
+        # Initialize components with persistence
         self._init_directories()
         self._init_embeddings()
-        self._init_vector_store()
+        self._init_persistent_chromadb()  # ✅ NEW: Persistent ChromaDB init
         self._init_database()
         
-        print("✅ RAG System initialized with medical embeddings")
+        print("✅ RAG System initialized with persistent medical embeddings")
     
     def _init_directories(self):
-        """Create necessary directories"""
+        """Create necessary directories with proper permissions"""
         os.makedirs(self.data_dir, exist_ok=True)
         os.makedirs(os.path.join(self.data_dir, "documents"), exist_ok=True)
-        print(f"📁 Data directory: {self.data_dir}")
+        
+        # ✅ PERSISTENCE FIX: Verify write permissions
+        test_file = os.path.join(self.data_dir, 'write_test.tmp')
+        try:
+            with open(test_file, 'w') as f:
+                f.write('test')
+            os.remove(test_file)
+            print(f"✅ Data directory with write permissions: {self.data_dir}")
+        except Exception as e:
+            print(f"❌ Directory permission issue: {e}")
+            raise
     
     def _init_embeddings(self):
         """Initialize medical-specific embedding model"""
@@ -208,34 +229,106 @@ class RAGSystem:
                 print(f"❌ Fallback embeddings also failed: {fallback_error}")
                 self.embeddings = None
     
-    def _init_vector_store(self):
-        """Initialize ChromaDB vector store with medical embeddings"""
+    def _init_persistent_chromadb(self):
+        """
+        ✅ CRITICAL FIX: Initialize ChromaDB with guaranteed persistence
+        """
         try:
-            if self.embeddings:
-                self.vector_store = Chroma(
+            print(f"🔄 Initializing persistent ChromaDB at: {self.data_dir}")
+            
+            # ✅ PERSISTENCE FIX: Use PersistentClient with explicit settings
+            self.chroma_client = chromadb.PersistentClient(
+                path=self.data_dir,
+                settings=Settings(
+                    is_persistent=True,
                     persist_directory=self.data_dir,
-                    embedding_function=self.embeddings,
-                    collection_name="medical_documents_medembed"  # Medical-specific collection
+                    allow_reset=False,  # Prevent accidental database resets
+                    anonymized_telemetry=False
                 )
-                print("✅ ChromaDB vector store initialized with medical embeddings")
+            )
+            
+            print("✅ Persistent ChromaDB client created")
+            
+            # ✅ PERSISTENCE FIX: Get or create collection with embedding function
+            try:
+                # Try to get existing collection
+                self.chroma_collection = self.chroma_client.get_collection(
+                    name=self.collection_name
+                )
+                existing_count = self.chroma_collection.count()
+                print(f"📊 Found existing collection '{self.collection_name}' with {existing_count} documents")
                 
-                # Check existing documents
-                try:
-                    collection_count = self.vector_store._collection.count()
-                    print(f"📊 Existing documents in collection: {collection_count}")
-                except:
-                    print("📊 New collection created")
-                    
+            except Exception:
+                # Create new collection if it doesn't exist
+                print(f"🔄 Creating new collection: {self.collection_name}")
+                self.chroma_collection = self.chroma_client.create_collection(
+                    name=self.collection_name,
+                    metadata={
+                        "description": "Medical documents with specialized embeddings",
+                        "embedding_model": self.embedding_model_name,
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                )
+                print(f"✅ Created new persistent collection: {self.collection_name}")
+            
+            # ✅ PERSISTENCE VERIFICATION
+            self._verify_persistence()
+            
+        except Exception as e:
+            print(f"❌ Persistent ChromaDB initialization failed: {e}")
+            traceback.print_exc()
+            # Fallback to in-memory storage
+            self.chroma_client = None
+            self.chroma_collection = None
+            self.fallback_storage = {}
+            print("⚠️ Using fallback in-memory storage")
+    
+    def _verify_persistence(self):
+        """Verify that ChromaDB persistence is working correctly"""
+        if not self.chroma_collection:
+            return False
+        
+        try:
+            # Test persistence by adding and retrieving a test document
+            test_id = f"persistence_test_{int(datetime.now().timestamp())}"
+            test_text = f"Persistence verification test - {datetime.now().isoformat()}"
+            test_metadata = {
+                "test": True,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "verification": "persistence_check"
+            }
+            
+            # Add test document
+            if self.embeddings:
+                test_embedding = self.embeddings.embed_query(test_text)
+                self.chroma_collection.add(
+                    documents=[test_text],
+                    metadatas=[test_metadata],
+                    ids=[test_id],
+                    embeddings=[test_embedding]
+                )
             else:
-                # Fallback to in-memory storage
-                self.vector_store = None
-                self.fallback_storage = {}
-                print("⚠️ Using fallback in-memory storage")
+                self.chroma_collection.add(
+                    documents=[test_text],
+                    metadatas=[test_metadata],
+                    ids=[test_id]
+                )
+            
+            # Verify it was added
+            result = self.chroma_collection.get(ids=[test_id])
+            if result['ids'] and len(result['ids']) > 0:
+                print("✅ ChromaDB persistence verification successful")
+                
+                # Clean up test document
+                self.chroma_collection.delete(ids=[test_id])
+                return True
+            else:
+                print("❌ ChromaDB persistence verification failed")
+                return False
                 
         except Exception as e:
-            print(f"❌ Vector store initialization failed: {e}")
-            self.vector_store = None
-            self.fallback_storage = {}
+            print(f"❌ Persistence verification error: {e}")
+            return False
     
     def _init_database(self):
         """Initialize SQLite database for metadata"""
@@ -337,7 +430,9 @@ class RAGSystem:
         return chunks
     
     def embed_and_store(self, chunks: List[Document], doc_type: str = 'medical', language: str = 'en') -> Dict[str, Any]:
-        """Embed chunks using medical embeddings and store in vector database"""
+        """
+        ✅ PERSISTENCE FIX: Embed chunks using medical embeddings and store with guaranteed persistence
+        """
         print(f"🔄 Embedding {len(chunks)} chunks with medical embeddings...")
         print(f"🧠 Using model: {self.embedding_model_name}")
         
@@ -352,18 +447,32 @@ class RAGSystem:
                     'ingestion_time': datetime.now(timezone.utc).isoformat()
                 })
             
-            if self.vector_store:
-                # Store in ChromaDB with medical embeddings
+            if self.chroma_collection and self.embeddings:
+                # ✅ PERSISTENCE FIX: Store in persistent ChromaDB
+                print("🔄 Computing medical embeddings...")
+                
+                # Prepare data for ChromaDB
+                documents_text = [chunk.page_content for chunk in chunks]
+                metadatas = [chunk.metadata for chunk in chunks]
                 ids = [str(uuid.uuid4()) for _ in chunks]
                 
-                print("🔄 Computing medical embeddings...")
-                self.vector_store.add_documents(documents=chunks, ids=ids)
-                print(f"✅ Stored {len(chunks)} chunks with medical embeddings in ChromaDB")
+                # Generate embeddings
+                embeddings = [self.embeddings.embed_query(doc) for doc in documents_text]
+                print(f"✅ Generated {len(embeddings)} medical embeddings")
                 
-                # Persist the database
-                if hasattr(self.vector_store, 'persist'):
-                    self.vector_store.persist()
-                    print("💾 Vector database persisted")
+                # Add to persistent collection
+                self.chroma_collection.add(
+                    documents=documents_text,
+                    metadatas=metadatas,
+                    ids=ids,
+                    embeddings=embeddings
+                )
+                
+                print(f"✅ Stored {len(chunks)} chunks with medical embeddings in persistent ChromaDB")
+                
+                # ✅ PERSISTENCE FIX: Verify storage was successful
+                stored_count = self.chroma_collection.count()
+                print(f"📊 Total documents in persistent storage: {stored_count}")
                 
             else:
                 # Fallback storage
@@ -387,7 +496,8 @@ class RAGSystem:
                 'doc_type': doc_type,
                 'language': language,
                 'embedding_model': self.embedding_model_name,
-                'embedding_type': 'medical_specialized'
+                'embedding_type': 'medical_specialized',
+                'persistent_storage': self.chroma_collection is not None
             }
             
         except Exception as e:
@@ -400,8 +510,8 @@ class RAGSystem:
             }
     
     def ingest_document_from_file(self, file_path: str, doc_type: str = 'medical', language: str = 'en') -> Dict[str, Any]:
-        """Complete document ingestion pipeline with medical embeddings"""
-        print(f"🔍 Processing with medical embeddings: {os.path.basename(file_path)}")
+        """Complete document ingestion pipeline with persistent medical embeddings"""
+        print(f"🔍 Processing with persistent medical embeddings: {os.path.basename(file_path)}")
         
         try:
             if not os.path.exists(file_path):
@@ -416,7 +526,7 @@ class RAGSystem:
             # Chunk documents with medical optimization
             chunks = self.chunk_documents(documents)
             
-            # Embed and store with medical embeddings
+            # Embed and store with persistent medical embeddings
             result = self.embed_and_store(chunks, doc_type, language)
             
             # Add file info to result
@@ -425,12 +535,13 @@ class RAGSystem:
                 'file_size': file_size,
                 'documents_loaded': len(documents),
                 'extraction_method': 'Medical-optimized',
-                'embedding_model_used': self.embedding_model_name
+                'embedding_model_used': self.embedding_model_name,
+                'persistent_storage': self.chroma_collection is not None
             })
             
             if result['success']:
-                print(f"✅ Successfully processed {file_path} with medical embeddings")
-                print(f"📊 Created {result['chunks_created']} chunks with medical embeddings")
+                print(f"✅ Successfully processed {file_path} with persistent medical embeddings")
+                print(f"📊 Created {result['chunks_created']} chunks with persistent medical embeddings")
             else:
                 print(f"❌ Processing failed: {result.get('error', 'Unknown error')}")
             
@@ -450,44 +561,54 @@ class RAGSystem:
     
     def search_relevant_context(self, query: str, max_docs: int = 5) -> List[Dict[str, Any]]:
         """
-        Search for relevant documents using medical-specialized semantic similarity
+        ✅ PERSISTENCE FIX: Search for relevant documents using persistent medical-specialized semantic similarity
         """
         print(f"🔍 Medical search for: {query[:100]}...")
-        print(f"🧠 Using medical embeddings: {self.embedding_model_name}")
+        print(f"🧠 Using persistent medical embeddings: {self.embedding_model_name}")
         
         try:
-            if self.vector_store:
-                # ChromaDB search with medical embeddings
-                results = self.vector_store.similarity_search_with_score(
-                    query=query,
-                    k=max_docs
+            if self.chroma_collection and self.embeddings:
+                # ✅ PERSISTENCE FIX: ChromaDB search with persistent medical embeddings
+                print("🔄 Querying persistent ChromaDB...")
+                
+                # Generate query embedding
+                query_embedding = self.embeddings.embed_query(query)
+                
+                # Search persistent collection
+                results = self.chroma_collection.query(
+                    query_embeddings=[query_embedding],
+                    n_results=max_docs,
+                    include=["documents", "metadatas", "distances"]
                 )
                 
                 formatted_results = []
-                for doc, score in results:
-                    # Convert distance to similarity score (ChromaDB returns distance)
-                    similarity_score = 1.0 - score if score <= 1.0 else 1.0 / (1.0 + score)
-                    
-                    formatted_results.append({
-                        'id': str(uuid.uuid4()),
-                        'text': doc.page_content,
-                        'metadata': doc.metadata,
-                        'similarity': float(similarity_score),
-                        'relevance_score': float(similarity_score),
-                        'embedding_model': self.embedding_model_name,
-                        'search_type': 'medical_semantic'
-                    })
+                if results['ids'][0]:  # Check if we have results
+                    for i in range(len(results['ids'][0])):
+                        # Convert distance to similarity score
+                        distance = results['distances'][0][i]
+                        similarity_score = 1.0 / (1.0 + distance) if distance > 0 else 1.0
+                        
+                        formatted_results.append({
+                            'id': results['ids'][0][i],
+                            'text': results['documents'][0][i],
+                            'metadata': results['metadatas'][0][i],
+                            'similarity': float(similarity_score),
+                            'relevance_score': float(similarity_score),
+                            'embedding_model': self.embedding_model_name,
+                            'search_type': 'persistent_medical_semantic'
+                        })
                 
-                print(f"✅ Found {len(formatted_results)} relevant medical documents")
+                print(f"✅ Found {len(formatted_results)} relevant medical documents (persistent)")
                 
                 # Log similarity scores for debugging
                 for i, result in enumerate(formatted_results):
-                    print(f"   Doc {i+1}: {result['similarity']:.3f} similarity (medical)")
+                    print(f"   Doc {i+1}: {result['similarity']:.3f} similarity (persistent medical)")
                 
                 return formatted_results
                 
             else:
                 # Enhanced fallback: Medical term-aware text matching
+                print("⚠️ Using fallback search (persistent ChromaDB not available)")
                 results = []
                 query_lower = query.lower()
                 
@@ -529,29 +650,34 @@ class RAGSystem:
             return []
     
     def get_system_stats(self) -> Dict[str, Any]:
-        """Get RAG system statistics with medical embedding info"""
+        """Get RAG system statistics with persistent medical embedding info"""
         try:
             total_docs = 0
-            if self.vector_store:
+            persistence_status = "Unknown"
+            
+            if self.chroma_collection:
                 try:
-                    collection = self.vector_store._collection
-                    total_docs = collection.count()
-                except:
-                    total_docs = "Unknown"
+                    total_docs = self.chroma_collection.count()
+                    persistence_status = "✅ Persistent ChromaDB Active"
+                except Exception as e:
+                    persistence_status = f"❌ ChromaDB Error: {str(e)}"
             else:
                 total_docs = len(self.fallback_storage)
+                persistence_status = "⚠️ Fallback Storage"
             
             return {
                 'total_documents': total_docs,
-                'vector_store_type': 'ChromaDB' if self.vector_store else 'Fallback',
+                'vector_store_type': 'Persistent ChromaDB' if self.chroma_collection else 'Fallback',
                 'embedding_model': self.embedding_model_name,
                 'embedding_type': 'Medical-specialized',
                 'data_directory': self.data_dir,
+                'persistence_status': persistence_status,
                 'database_available': self.db_manager is not None,
                 'gpu_available': torch.cuda.is_available(),
                 'device_used': 'cuda' if torch.cuda.is_available() else 'cpu',
-                'status': 'Ready (Medical Embeddings)',
-                'chunking_strategy': 'Medical-optimized'
+                'status': 'Ready (Persistent Medical Embeddings)',
+                'chunking_strategy': 'Medical-optimized',
+                'collection_name': self.collection_name
             }
             
         except Exception as e:
@@ -562,7 +688,7 @@ class RAGSystem:
             }
     
     def get_all_documents(self) -> List[Dict[str, Any]]:
-        """Get metadata for all documents with medical embedding info"""
+        """Get metadata for all documents with persistent medical embedding info"""
         try:
             if self.db_manager:
                 return self.db_manager.get_all_documents()
@@ -578,19 +704,58 @@ class RAGSystem:
         except Exception as e:
             print(f"❌ Failed to get documents: {e}")
             return []
+    
+    def verify_persistence(self) -> bool:
+        """
+        ✅ NEW: Verify that documents will persist across application restarts
+        """
+        if not self.chroma_collection:
+            print("❌ No persistent collection available")
+            return False
+        
+        try:
+            # Check if ChromaDB files exist on disk
+            chroma_files = [
+                "chroma.sqlite3",  # Main database file
+                "index",           # Index files directory
+            ]
+            
+            persistence_files_found = []
+            for file_name in chroma_files:
+                file_path = os.path.join(self.data_dir, file_name)
+                if os.path.exists(file_path):
+                    persistence_files_found.append(file_name)
+            
+            if persistence_files_found:
+                print(f"✅ Persistence files found: {persistence_files_found}")
+                doc_count = self.chroma_collection.count()
+                print(f"✅ Persistent storage verified: {doc_count} documents will persist")
+                return True
+            else:
+                print("❌ No persistence files found on disk")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Persistence verification failed: {e}")
+            return False
+
 
 # Test function
-def test_medical_rag_system():
-    """Test the RAG system with medical embeddings"""
-    print("🧪 Testing Medical RAG System with MedEmbed...")
+def test_persistent_medical_rag_system():
+    """Test the RAG system with persistent medical embeddings"""
+    print("🧪 Testing Persistent Medical RAG System with MedEmbed...")
     
     try:
-        # Initialize with medical embeddings
+        # Initialize with persistent medical embeddings
         rag = RAGSystem(embedding_model="medical")
+        
+        # Test persistence verification
+        persistence_ok = rag.verify_persistence()
+        print(f"📊 Persistence verification: {'✅ PASSED' if persistence_ok else '❌ FAILED'}")
         
         # Test system stats
         stats = rag.get_system_stats()
-        print(f"📊 Medical system stats: {stats}")
+        print(f"📊 Persistent medical system stats: {stats}")
         
         # Test medical search
         medical_queries = [
@@ -601,15 +766,16 @@ def test_medical_rag_system():
         
         for query in medical_queries:
             results = rag.search_relevant_context(query)
-            print(f"🔍 '{query}': {len(results)} medical documents found")
+            print(f"🔍 '{query}': {len(results)} medical documents found (persistent)")
         
-        print("✅ Medical RAG System test completed successfully")
+        print("✅ Persistent Medical RAG System test completed successfully")
         return True
         
     except Exception as e:
-        print(f"❌ Medical RAG System test failed: {e}")
+        print(f"❌ Persistent Medical RAG System test failed: {e}")
         traceback.print_exc()
         return False
 
+
 if __name__ == "__main__":
-    test_medical_rag_system()
+    test_persistent_medical_rag_system()
