@@ -154,26 +154,56 @@ def create_app(config_name='default'):
             try:
                 logger.info("🔄 Creating enhanced RAG system with prompt optimization...")
                 
-                data_dir = 'data/chromadb'
+                data_dir = os.path.abspath('data/chromadb')
                 os.makedirs(data_dir, exist_ok=True)
-                logger.info(f"📁 Data directory created: {data_dir}")
                 
-                # Test directory permissions
-                test_file = os.path.join(data_dir, 'test_write.tmp')
+                logger.info(f"🔄 Initializing RAG with persistent storage: {data_dir}")
+        
+                # ✅ CRITICAL: Verify write permissions before initialization
+                test_file = os.path.join(data_dir, 'persistence_test.tmp')
                 try:
                     with open(test_file, 'w') as f:
                         f.write('test')
                     os.remove(test_file)
-                    logger.info("✅ Directory permissions OK")
+                    logger.info("✅ Directory permissions verified")
                 except Exception as perm_error:
-                    logger.info(f"⚠️ Directory permission issue: {perm_error}")
+                    logger.error(f"❌ Cannot write to RAG directory: {perm_error}")
+                    raise
                 
-                # Initialize RAG system with medical embeddings
-                logger.info("🧠 Initializing with medical embeddings and prompt optimization...")
+                # Initialize with your new persistent RAG system
                 app.rag_system = RAGSystem(
                     data_dir=data_dir,
                     embedding_model="medical"
                 )
+                
+                # ✅ NEW: Verify persistence immediately after initialization
+                doc_count = app.rag_system.chroma_collection.count() if app.rag_system.chroma_collection else 0
+                logger.info(f"📊 RAG system loaded with {doc_count} existing documents")
+                
+                # ✅ NEW: Verify persistence status
+                if hasattr(app.rag_system, 'verify_persistence'):
+                    persistence_ok = app.rag_system.verify_persistence()
+                    if persistence_ok:
+                        logger.info("✅ Document persistence verified - uploads will persist across restarts")
+                    else:
+                        logger.warning("⚠️ Persistence verification failed - documents may not persist")
+                
+                if doc_count > 0:
+                    logger.info("🎉 Previous documents successfully restored from persistent storage!")
+                else:
+                    logger.info("ℹ️ No previous documents found - fresh database ready for uploads")
+                
+                # ✅ CRITICAL FIX: Initialize session manager BEFORE register_routes
+                app.session_manager = SessionManager(
+                    db_manager=app.rag_system.db_manager if hasattr(app.rag_system, 'db_manager') else None,
+                    session_timeout_hours=24
+                )
+                logger.info("✅ Session manager initialized with RAG integration")
+                
+            except Exception as rag_error:
+                logger.error(f"❌ RAG system initialization failed: {rag_error}")
+                traceback.print_exc()
+                app.rag_system = None
                 logger.info("✅ RAG system initialized successfully!")
                 
                 # ✅ MILESTONE 5: Add English prompt optimizer to RAG system
@@ -604,6 +634,51 @@ def register_routes(app):
             health_status["components"]["prompt_optimizer"] = "❌ Not Available"
         
         return jsonify(health_status)
+
+    @app.route('/api/rag/persistence-status')
+    @require_auth(app.session_manager)
+    def rag_persistence_status():
+        """Check RAG system persistence status"""
+        if not RAG_AVAILABLE or not app.rag_system:
+            return jsonify({"error": "RAG system not available"}), 503
+        
+        try:
+            # Get persistence information
+            status_info = {
+                'persistent_storage': app.rag_system.chroma_collection is not None,
+                'data_directory': app.rag_system.data_dir,
+                'total_documents': 0,
+                'persistence_files_exist': False,
+                'collection_name': getattr(app.rag_system, 'collection_name', 'Unknown')
+            }
+            
+            # Get document count
+            if app.rag_system.chroma_collection:
+                status_info['total_documents'] = app.rag_system.chroma_collection.count()
+            
+            # Check for persistence files
+            if hasattr(app.rag_system, 'verify_persistence'):
+                status_info['persistence_files_exist'] = app.rag_system.verify_persistence()
+            
+            # Check for ChromaDB files on disk
+            chroma_files = ['chroma.sqlite3']
+            files_found = []
+            for file_name in chroma_files:
+                file_path = os.path.join(app.rag_system.data_dir, file_name)
+                if os.path.exists(file_path):
+                    files_found.append(file_name)
+            
+            status_info['persistence_files_found'] = files_found
+            status_info['persistence_verified'] = len(files_found) > 0
+            
+            return jsonify({
+                'status': 'success',
+                'persistence_info': status_info,
+                'message': '✅ Persistence active' if status_info['persistence_verified'] else '⚠️ Persistence issues detected'
+            })
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/api/medgemma/status')
     @optional_auth(app.session_manager)
