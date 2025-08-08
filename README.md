@@ -64,6 +64,9 @@ The system's core components include:
 git clone https://github.com/your-username/pulsequery-ai.git
 cd pulsequery-ai
 ```
+## Techincal Architecture
+<img width="6089" height="2885" alt="image" src="https://github.com/user-attachments/assets/31d0e2ac-d641-4527-b1cc-3f6159465962" />
+
 
 ### **2. Create Virtual Environment**
 
