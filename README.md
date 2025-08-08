@@ -5,8 +5,12 @@ https://miro.com/app/board/uXjVJYWSi6c=/?share_link_id=134124900492 Refer Mind M
 
 
 -----
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/db3d47be-4bb8-4a87-82b7-1b8cfd8afe56" alt="PulseQuery AI Logo" width="100"/>
+</p>
 
-# 🏥 PulseQuery AI - Medical AI System
+<h1 align="center">PulseQuery AI</h1>
+
 
 ### **Advanced Medical AI System with MedGemma Model, Medical Document Processing & RAG Technology**
 
