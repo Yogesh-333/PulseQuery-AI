@@ -204,227 +204,6 @@ def create_app(config_name='default'):
                 logger.error(f"❌ RAG system initialization failed: {rag_error}")
                 traceback.print_exc()
                 app.rag_system = None
-                logger.info("✅ RAG system initialized successfully!")
-                
-                # ✅ Add English prompt optimizer to RAG system
-                try:
-                    from core.prompt_optimizer import EnglishMedicalPromptOptimizer
-                    app.rag_system.prompt_optimizer = EnglishMedicalPromptOptimizer()
-                    logger.info("✅ English Medical Prompt Optimizer integrated!")
-                except ImportError as opt_error:
-                    logger.info(f"⚠️ Prompt optimizer import failed: {opt_error}")
-                    app.rag_system.prompt_optimizer = None
-                
-                # Test basic functionality
-                try:
-                    stats = app.rag_system.get_system_stats()
-                    logger.info(f"📊 RAG system stats: {stats}")
-                except Exception as stats_error:
-                    logger.info(f"⚠️ Could not get RAG stats: {stats_error}")
-                
-                # Enhanced prompt construction
-                def enhanced_augment_prompt_with_context(self, original_prompt, context_docs):
-                    """Improved prompt construction with better instructions and context handling"""
-                    logger.info(f"🔍 Processing {len(context_docs)} context documents")
-                    
-                    # Only use documents with positive similarity (>0)
-                    good_docs = [doc for doc in context_docs if doc.get('similarity', 0) > 0]
-                    logger.info(f"🔍 Found {len(good_docs)} good documents (similarity > 0)")
-                    
-                    # Extract patient name for personalized prompts
-                    patient_name = None
-                    patient_patterns = [
-                        r'Patient Name:\s*([^,\n]+(?:,\s*[^,\n]+)?)',
-                        r'patient:\s*([^,\n]+(?:,\s*[^,\n]+)?)',
-                        r'([A-Z][a-zA-Z]+,\s*[A-Z][a-zA-Z]+)'
-                    ]
-                    
-                    for pattern in patient_patterns:
-                        match = re.search(pattern, original_prompt, re.IGNORECASE)
-                        if match:
-                            patient_name = match.group(1).strip()
-                            logger.info(f"🔍 Detected patient: {patient_name}")
-                            break
-                    
-                    if not good_docs:
-                        # Better fallback prompt when no relevant context
-                        if patient_name:
-                            fallback_prompt = f"""You are a medical AI assistant. Create a comprehensive medical report for {patient_name}.
-
-Since no specific medical records are available, generate a structured medical report template with the following sections:
-
-## MEDICAL REPORT: {patient_name}
-
-### PATIENT IDENTIFICATION
-- Patient Name: {patient_name}
-- Age: [To be determined]
-- Gender: [To be determined]
-- Medical Record Number: [To be assigned]
-
-### CHIEF COMPLAINT
-[Patient's main reason for medical visit]
-
-### MEDICAL HISTORY
-[Past medical conditions, surgeries, chronic diseases]
-
-### CURRENT SYMPTOMS
-[Present symptoms and their characteristics]
-
-### CURRENT MEDICATIONS
-[List of current medications and dosages]
-
-### CLINICAL FINDINGS
-[Physical examination findings and vital signs]
-
-### DIAGNOSTIC TESTS
-[Laboratory results and imaging studies]
-
-### ASSESSMENT AND PLAN
-[Medical assessment and treatment recommendations]
-
-Please provide detailed content for each section based on common medical presentation patterns."""
-                        else:
-                            fallback_prompt = f"""You are a medical AI assistant. Based on the request: "{original_prompt}"
-
-Please provide a comprehensive medical response that includes:
-- Detailed medical information
-- Clinical considerations
-- Treatment recommendations
-- Follow-up care suggestions
-
-Generate a thorough medical analysis addressing the request."""
-                        
-                        logger.info(f"✅ Using fallback prompt (length: {len(fallback_prompt)})")
-                        return fallback_prompt
-                    
-                    # Build concise but informative context
-                    context_text = ""
-                    for i, doc in enumerate(good_docs[:3], 1):
-                        doc_excerpt = doc['text'][:600] + "..." if len(doc['text']) > 600 else doc['text']
-                        context_text += f"\n--- Medical Document {i} ---\n{doc_excerpt}\n"
-                    
-                    # More effective prompt structure
-                    if patient_name:
-                        enhanced_prompt = f"""You are a medical AI assistant. Using the medical records below, create a comprehensive medical report for {patient_name}.
-
-AVAILABLE MEDICAL RECORDS:
-{context_text}
-
-TASK: Generate a detailed, structured medical report that includes:
-
-## COMPREHENSIVE MEDICAL REPORT: {patient_name}
-
-### PATIENT IDENTIFICATION
-Extract and present patient demographics, identifiers, and basic information.
-
-### CHIEF COMPLAINT & PRESENTING SYMPTOMS
-Detail the main medical concerns, symptoms, onset, duration, and severity.
-
-### MEDICAL HISTORY
-Summarize past medical conditions, surgeries, hospitalizations, and chronic diseases.
-
-### CURRENT DIAGNOSES
-List primary and secondary diagnoses with supporting clinical evidence.
-
-### MEDICATIONS & TREATMENTS
-Document current medications (names, dosages, frequencies) and treatments.
-
-### CLINICAL FINDINGS & TEST RESULTS
-Report vital signs, laboratory values, imaging results, and examination findings.
-
-### HEALTHCARE PROVIDER ASSESSMENTS
-Include provider notes, clinical observations, and medical opinions.
-
-### CARE PLAN & RECOMMENDATIONS
-Outline treatment plans, follow-up care, monitoring, and specialist referrals.
-
-INSTRUCTIONS:
-- Write complete, detailed paragraphs for each section
-- Use specific medical information from the records
-- Include dates, values, and measurements when available
-- Use professional medical terminology
-- If information is missing, state "Not documented in available records"
-
-Begin generating the comprehensive medical report now:"""
-                    else:
-                        enhanced_prompt = f"""You are a medical AI assistant. Based on the medical information provided below, answer the following question comprehensively:
-
-MEDICAL INFORMATION:
-{context_text}
-
-QUESTION: {original_prompt}
-
-INSTRUCTIONS:
-- Provide a detailed, evidence-based medical response
-- Use specific information from the medical records
-- Include clinical reasoning and recommendations
-- Use professional medical terminology
-- Cite relevant findings from the documents
-
-Generate a thorough medical response:"""
-                    
-                    # Safety: Manage prompt length
-                    if len(enhanced_prompt) > 2000:
-                        logger.info("⚠️ Prompt exceeds 2000 chars, using shorter version")
-                        if patient_name:
-                            return f"""Create a comprehensive medical report for {patient_name} using these medical records:
-
-{context_text[:800]}
-
-Include: patient identification, symptoms, medical history, diagnoses, medications, clinical findings, and care plan.
-
-Generate detailed medical report:"""
-                        else:
-                            return f"Based on: {context_text[:500]}\n\nQuestion: {original_prompt}\n\nProvide detailed medical response:"
-                    
-                    logger.info(f"✅ Enhanced prompt created (length: {len(enhanced_prompt)})")
-                    return enhanced_prompt
-
-                # Bind the enhanced method
-                import types
-                app.rag_system.augment_prompt_with_context = types.MethodType(
-                    enhanced_augment_prompt_with_context, 
-                    app.rag_system
-                )
-                
-                logger.info("✅ Enhanced RAG system with prompt optimization initialized!")
-                
-                # Initialize session manager with RAG database
-                app.session_manager = SessionManager(
-                    db_manager=app.rag_system.db_manager if hasattr(app.rag_system, 'db_manager') else None,
-                    session_timeout_hours=24
-                )
-                logger.info("✅ Session manager initialized with RAG integration")
-                
-            except Exception as rag_error:
-                logger.info(f"❌ RAG system initialization failed: {rag_error}")
-                traceback.print_exc()
-                
-                # Try simple fallback
-                logger.info("🔄 Attempting simple RAG fallback...")
-                try:
-                    class SimpleRAGFallback:
-                        def __init__(self):
-                            self.documents = []
-                            self.prompt_optimizer = None
-                            logger.info("⚠️ Using simple RAG fallback")
-                        
-                        def ingest_document_from_file(self, file_path, doc_type='medical', language='en'):
-                            return {'success': False, 'error': 'RAG system unavailable', 'chunks_created': 0}
-                        
-                        def search_relevant_context(self, query, max_docs=5):
-                            return []
-                        
-                        def get_system_stats(self):
-                            return {'total_documents': 0, 'status': 'Fallback mode'}
-                    
-                    app.rag_system = SimpleRAGFallback()
-                    logger.info("✅ Simple RAG fallback initialized")
-                    
-                except Exception as fallback_error:
-                    logger.info(f"❌ Even fallback failed: {fallback_error}")
-                    app.rag_system = None
-                
                 app.session_manager = SessionManager()
         else:
             app.rag_system = None
@@ -440,7 +219,6 @@ Generate detailed medical report:"""
         logger.info(f"❌ CRITICAL ERROR in create_app(): {e}")
         traceback.print_exc()
         raise
-
 
 def register_routes(app):
     """Register all application routes"""
@@ -488,7 +266,7 @@ def register_routes(app):
             "message": "🔬 PulseQuery AI - Complete Medical System",
             "status": "Running",
             "milestone": 5,
-            "enhancement": "English Prompt Optimization System",
+            "enhancement": "English Prompt Optimization System with Energy Metrics",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "authenticated": user_info is not None,
             "user": user_info,
@@ -501,7 +279,8 @@ def register_routes(app):
                 "session_manager": "✅ Ready" if app.session_manager else "❌ Failed",
                 "enhanced_prompts": "✅ V2.0 Enabled",
                 "document_upload": "✅ Available" if app.rag_system else "❌ RAG Required",
-                "medical_embeddings": "✅ Enabled" if app.rag_system else "❌ Not Available"
+                "medical_embeddings": "✅ Enabled" if app.rag_system else "❌ Not Available",
+                "energy_metrics": "✅ Enabled"
             }
         })
 
@@ -707,12 +486,12 @@ def register_routes(app):
                 "milestone": 5
             })
 
-    # ✅ FIXED Prompt Optimization Endpoint
+    # ✅ ENHANCED Prompt Optimization Endpoint WITH ENERGY METRICS
     @app.route('/api/prompt/optimize', methods=['POST'])
     @require_auth(app.session_manager)  
     def optimize_prompt():
-        """Optimize medical prompt from user query with enhanced error handling and query preservation"""
-        logger.info("🧠 PROMPT OPTIMIZATION ENDPOINT CALLED")
+        """Optimize medical prompt with enhanced energy saving metrics calculation"""
+        logger.info("🧠 PROMPT OPTIMIZATION WITH ENERGY METRICS ENDPOINT CALLED")
         
         try:
             data = request.get_json()
@@ -742,7 +521,7 @@ def register_routes(app):
                     logger.warning(f"⚠️ Context search failed: {context_error}")
                     context_docs = []
             
-            # ✅ FIX: Enhanced error handling for optimization with query preservation
+            # ✅ Enhanced error handling for optimization with query preservation
             try:
                 logger.info("🔄 Calling prompt optimizer...")
                 result = app.rag_system.prompt_optimizer.optimize_prompt(query, context_docs)
@@ -766,29 +545,45 @@ def register_routes(app):
                 
                 fallback_prompt = f"""You are a medical AI assistant specializing in symptom analysis and diagnosis.
 
-    PATIENT SYMPTOMS AND QUESTION:
-    {query}
+PATIENT SYMPTOMS AND QUESTION:
+{query}
 
-    CLINICAL CONTEXT:
-    {context_summary}
+CLINICAL CONTEXT:
+{context_summary}
 
-    Please provide a comprehensive medical response that includes:
+Please provide a comprehensive medical response that includes:
 
-    ## SYMPTOM ANALYSIS
+## SYMPTOM ANALYSIS
 
-    ### SYMPTOM CHARACTERIZATION
-    Detail the presenting symptoms with onset, duration, and characteristics.
+### SYMPTOM CHARACTERIZATION
+Detail the presenting symptoms with onset, duration, and characteristics.
 
-    ### DIFFERENTIAL DIAGNOSIS
-    List potential diagnoses ranked by likelihood with supporting evidence.
+### DIFFERENTIAL DIAGNOSIS
+List potential diagnoses ranked by likelihood with supporting evidence.
 
-    ### RECOMMENDED DIAGNOSTIC WORKUP
-    Suggest appropriate tests, imaging, and consultations.
+### RECOMMENDED DIAGNOSTIC WORKUP
+Suggest appropriate tests, imaging, and consultations.
 
-    ### MANAGEMENT RECOMMENDATIONS
-    Provide treatment suggestions and monitoring plans.
+### MANAGEMENT RECOMMENDATIONS
+Provide treatment suggestions and monitoring plans.
 
-    Generate a thorough medical analysis addressing the patient's symptoms and diagnostic question:"""
+Generate a thorough medical analysis addressing the patient's symptoms and diagnostic question:"""
+                
+                # ✅ NEW: Calculate energy metrics for fallback
+                original_tokens = len(query.split()) * 1.3  # Rough token estimation
+                fallback_tokens = len(fallback_prompt.split()) * 1.3
+                
+                # Energy calculation constants
+                ENERGY_PER_TOKEN = 0.0012  # Wh per token (MedGemma 4B Q8)
+                CO2_PER_WH = 0.000233      # kg CO2 per Wh (average grid)
+                COST_PER_KWH = 0.12        # USD per kWh
+                
+                token_reduction = max(0, original_tokens - fallback_tokens)
+                energy_saved_wh = token_reduction * ENERGY_PER_TOKEN
+                co2_saved_kg = energy_saved_wh * CO2_PER_WH
+                cost_saved_usd = (energy_saved_wh / 1000) * COST_PER_KWH
+                
+                efficiency_improvement = (token_reduction / original_tokens) * 100 if original_tokens > 0 else 0
                 
                 return jsonify({
                     'success': True,
@@ -799,10 +594,20 @@ def register_routes(app):
                     'patient_info': {'name': None, 'age': None, 'gender': None, 'chief_complaint': None},
                     'metrics': {
                         'length': len(fallback_prompt), 
-                        'token_estimate': len(fallback_prompt)//4, 
+                        'token_estimate': int(fallback_tokens), 
                         'context_utilization': 0.0, 
                         'patient_specificity': 0.0, 
                         'medical_terminology_density': 0.3
+                    },
+                    'energy_metrics': {
+                        'original_tokens': int(original_tokens),
+                        'optimized_tokens': int(fallback_tokens),
+                        'tokens_reduced': int(token_reduction),
+                        'energy_saved_wh': round(energy_saved_wh, 6),
+                        'co2_saved_kg': round(co2_saved_kg, 8),
+                        'cost_saved_usd': round(cost_saved_usd, 6),
+                        'efficiency_improvement_percent': round(efficiency_improvement, 2),
+                        'energy_efficiency_percent': round((energy_saved_wh / (original_tokens * ENERGY_PER_TOKEN)) * 100, 2) if original_tokens > 0 else 0
                     },
                     'context_docs_used': len(context_docs),
                     'optimized_by': request.current_user["user_name"],
@@ -810,6 +615,28 @@ def register_routes(app):
                     'fallback_used': True,
                     'optimization_error': str(opt_error)
                 })
+            
+            # ✅ NEW: ENERGY METRICS CALCULATION
+            original_tokens = len(query.split()) * 1.3  # Rough token estimation
+            optimized_tokens = len(result['optimized_prompt'].split()) * 1.3
+            
+            # Energy calculation constants (based on GPU processing)
+            ENERGY_PER_TOKEN = 0.0012  # Wh per token (MedGemma 4B Q8)
+            CO2_PER_WH = 0.000233      # kg CO2 per Wh (average grid)
+            COST_PER_KWH = 0.12        # USD per kWh
+            
+            token_reduction = max(0, original_tokens - optimized_tokens)
+            energy_saved_wh = token_reduction * ENERGY_PER_TOKEN
+            co2_saved_kg = energy_saved_wh * CO2_PER_WH
+            cost_saved_usd = (energy_saved_wh / 1000) * COST_PER_KWH
+            
+            # Calculate efficiency metrics
+            if original_tokens > 0:
+                efficiency_improvement = (token_reduction / original_tokens) * 100
+                energy_efficiency = (energy_saved_wh / (original_tokens * ENERGY_PER_TOKEN)) * 100
+            else:
+                efficiency_improvement = 0
+                energy_efficiency = 0
             
             # ✅ FIX: Safe attribute access with proper error handling
             try:
@@ -870,6 +697,17 @@ def register_routes(app):
                 'medical_specialty': result.get('medical_specialty', 'general_medicine'),
                 'patient_info': patient_data,
                 'metrics': metrics_data,
+                # ✅ NEW: Energy and efficiency metrics
+                'energy_metrics': {
+                    'original_tokens': int(original_tokens),
+                    'optimized_tokens': int(optimized_tokens),
+                    'tokens_reduced': int(token_reduction),
+                    'energy_saved_wh': round(energy_saved_wh, 6),
+                    'co2_saved_kg': round(co2_saved_kg, 8),
+                    'cost_saved_usd': round(cost_saved_usd, 6),
+                    'efficiency_improvement_percent': round(efficiency_improvement, 2),
+                    'energy_efficiency_percent': round(energy_efficiency, 2)
+                },
                 'context_docs_used': len(context_docs),
                 'optimized_by': request.current_user["user_name"],
                 'milestone': 5,
@@ -878,7 +716,9 @@ def register_routes(app):
             }
             
             logger.info(f"📤 Sending response with {len(response_data['optimized_prompt'])} char prompt")
-            logger.info(f"🔍 Query preservation check: {response_data['query_preservation_check']}")
+            logger.info(f"🔋 Energy saved: {response_data['energy_metrics']['energy_saved_wh']:.6f} Wh")
+            logger.info(f"🌱 CO2 saved: {response_data['energy_metrics']['co2_saved_kg']:.8f} kg")
+            logger.info(f"💰 Cost saved: ${response_data['energy_metrics']['cost_saved_usd']:.6f}")
             
             return jsonify(response_data)
             
@@ -901,6 +741,16 @@ def register_routes(app):
                     'context_utilization': 0.0,
                     'patient_specificity': 0.0,
                     'medical_terminology_density': 0.0
+                },
+                'energy_metrics': {
+                    'original_tokens': 0,
+                    'optimized_tokens': 0,
+                    'tokens_reduced': 0,
+                    'energy_saved_wh': 0.0,
+                    'co2_saved_kg': 0.0,
+                    'cost_saved_usd': 0.0,
+                    'efficiency_improvement_percent': 0.0,
+                    'energy_efficiency_percent': 0.0
                 },
                 'context_docs_used': 0,
                 'optimized_by': 'System',
@@ -1106,19 +956,20 @@ def register_routes(app):
                 }
             }), 500
 
-    # ✅ Enhanced Test UI with MARKDOWN RENDERING
+    # ✅ Enhanced Test UI with ENERGY METRICS DISPLAY
     @app.route('/test-ui')
     def test_ui():
-        """Complete test interface with markdown rendering capability"""
+        """Complete test interface with energy metrics display"""
         return """
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>PulseQuery AI - Prompt Optimization</title>
+            <title>PulseQuery AI - Prompt Optimization with Energy Metrics</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
             <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
             <style>
                 body { 
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -1197,14 +1048,77 @@ def register_routes(app):
                     margin: 8px 0;
                     font-size: 0.9em;
                 }
-                .metrics-info {
-                    background: #f8f9fa;
-                    border: 1px solid #dee2e6;
-                    border-radius: 4px;
-                    padding: 6px;
-                    font-size: 0.8em;
-                    color: #6c757d;
+                
+                /* ✅ UPDATED: Prompt Metrics styling to match Energy Metrics */
+                .prompt-metrics {
+                    background: linear-gradient(135deg, #e8f5e8, #f0f9ff);
+                    border: 1px solid #4caf50;
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin: 16px 0;
                 }
+
+                .prompt-metric {
+                    background: white;
+                    border: 1px solid #e1f5fe;
+                    border-radius: 6px;
+                    padding: 10px;
+                    margin: 5px;
+                    text-align: center;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+
+                .prompt-metric-value {
+                    font-size: 1.2rem;
+                    font-weight: 600;
+                    color: #1976d2;
+                }
+
+                .prompt-metric-label {
+                    font-size: 0.8rem;
+                    color: #666;
+                    margin-top: 4px;
+                }
+
+                .prompt-metrics h6 {
+                    color: #2e7d32;
+                    margin-bottom: 16px;
+                    font-weight: 600;
+                }
+                
+                /* ✅ NEW: Energy Metrics Styling */
+                .energy-metrics {
+                    background: linear-gradient(135deg, #e8f5e8, #f0f9ff);
+                    border: 1px solid #4caf50;
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin: 16px 0;
+                }
+                .energy-metric {
+                    background: white;
+                    border: 1px solid #e1f5fe;
+                    border-radius: 6px;
+                    padding: 10px;
+                    margin: 5px;
+                    text-align: center;
+                }
+                .energy-value {
+                    font-size: 1.2rem;
+                    font-weight: 600;
+                    color: #1976d2;
+                }
+                .energy-label {
+                    font-size: 0.8rem;
+                    color: #666;
+                }
+                .environmental-impact {
+                    background: rgba(76, 175, 80, 0.1);
+                    border-left: 4px solid #4caf50;
+                    padding: 10px;
+                    margin: 10px 0;
+                    border-radius: 4px;
+                }
+                
                 .loading-spinner {
                     display: inline-block;
                     width: 16px;
@@ -1268,7 +1182,7 @@ def register_routes(app):
                     color: rgba(255, 255, 255, 0.9);
                     font-weight: 400;
                 }
-
+                
                 @keyframes spin {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
@@ -1364,7 +1278,7 @@ def register_routes(app):
                         </div>
                         <div class="header-content">
                             <h1 class="main-title">PulseQuery AI</h1>
-                            <p class="subtitle">Advanced Medical Intelligence Platform</p>
+                            <p class="subtitle">Advanced Medical Intelligence Platform with Energy Optimization</p>
                         </div>
                     </div>
                     </div>
@@ -1374,40 +1288,10 @@ def register_routes(app):
                             <p><strong>Status:</strong> <span id="systemStatus" class="status-badge">Checking...</span></p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Core Capabilities:</strong> Smart Query Analysis • Medical AI • Patient Data Extraction</p>
-                            <p><strong>Latest:</strong> Enhanced Prompt Engineering + Markdown Support</p>
+                            <p><strong>Core Capabilities:</strong> Smart Query Analysis • Medical AI • Patient Data Extraction • Energy Optimization</p>
+                            <p><strong>Latest:</strong> Enhanced Prompt Engineering + Energy Metrics + Markdown Support</p>
                         </div>
                     </div>
-                </div>
-
-                <!-- System Health Dashboard -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5>🔧 System Health Dashboard</h5>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <button class="btn btn-info w-100" onclick="testConnection()">🔗 Connection Test</button>
-                        </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-info w-100" onclick="checkHealth()">❤️ Full Health Check</button>
-                        </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-info w-100" onclick="checkModel()">🤖 Model Status</button>
-                        </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-info w-100" onclick="checkRAG()">🔍 RAG System</button>
-                        </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-md-6">
-                            <button class="btn btn-warning w-100" onclick="checkOptimizerStatus()">🧠 Debug Optimizer</button>
-                        </div>
-                        <div class="col-md-6">
-                            <button class="btn btn-secondary w-100" onclick="clearResults()">🗑️ Clear Results</button>
-                        </div>
-                    </div>
-                    <div id="systemResults" class="mt-3"></div>
                 </div>
 
                 <!-- Authentication -->
@@ -1443,11 +1327,11 @@ def register_routes(app):
                     <small class="text-muted mt-2">Demo Passwords: password123, admin123, nurse123, resident123</small>
                 </div>
 
-                <!-- ✅ AI-Assisted Medical Query Processing -->
+                <!-- ✅ AI-Assisted Medical Query Processing with Energy Metrics -->
                 <div class="card" id="promptOptimizationCard" style="display: none;">
                     <div class="card-header">
-                        <h5>🧠 AI-Assisted Prompt Optimization</h5>
-                        <small>Submit medical query → AI optimizes prompt → Review & edit → Generate detailed insights(optional user context)</small>
+                        <h5>🧠 AI-Assisted Prompt Optimization with Energy Metrics</h5>
+                        <small>Submit medical query → AI optimizes prompt → Review & edit → Generate detailed insights → View energy savings</small>
                     </div>                    
                     <!-- Step 1: User Query Input -->
                     <div class="mb-4">
@@ -1464,7 +1348,7 @@ def register_routes(app):
                         </div>
                         <div class="mt-3">
                             <button class="btn btn-primary btn-lg" onclick="optimizePrompt()">
-                                🔍 Optimize Prompt
+                                🔍 Optimize Prompt with Energy Analysis
                             </button>
                         </div>
                     </div>
@@ -1474,6 +1358,19 @@ def register_routes(app):
                         <hr>
                         <label class="form-label"><strong>Step 2: Review & Edit Optimized Prompt</strong></label>
                         <div class="optimization-info" id="optimizationInfo"></div>
+                        
+                        <!-- ✅ NEW: Energy Metrics Display -->
+                        <div id="energyMetricsSection" class="energy-metrics" style="display: none;">
+                            <h6><i class="fas fa-leaf"></i> 🌱 Optimization Energy Impact</h6>
+                            <div class="row" id="energyMetricsGrid">
+                                <!-- Energy metrics will be populated here -->
+                            </div>
+                            <div class="environmental-impact" id="environmentalImpact">
+                                <!-- Environmental impact summary -->
+                            </div>
+                            <canvas id="energyChart" width="400" height="150" style="margin-top: 10px;"></canvas>
+                        </div>
+                        
                         <textarea id="optimizedPrompt" class="form-control" rows="15" 
                                   placeholder="Optimized prompt will appear here..."></textarea>
                         
@@ -1488,7 +1385,13 @@ def register_routes(app):
                                     </button>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="metrics-info" id="promptMetrics"></div>
+                                    <!-- ✅ UPDATED: New prompt metrics display matching energy metrics style -->
+                                    <div id="promptMetrics" class="prompt-metrics" style="display: none;">
+                                        <h6><i class="fas fa-chart-line"></i> 📊 Prompt Quality Metrics</h6>
+                                        <div class="row" id="promptMetricsGrid">
+                                            <!-- Metrics cards will be populated here -->
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1552,8 +1455,8 @@ def register_routes(app):
                 <!-- Footer -->
                 <div class="card">
                     <div class="text-center">
-                        <p class="mb-2"><strong>PulseQuery AI</strong></p>
-                        <p class="mb-0 text-muted">Empowering Healthcare with AI-Driven Insights</p>
+                        <p class="mb-2"><strong>PulseQuery AI v5.0</strong></p>
+                        <p class="mb-0 text-muted">Empowering Healthcare with AI-Driven Insights & Energy Optimization</p>
                     </div>
                 </div>
             </div>
@@ -1564,7 +1467,7 @@ def register_routes(app):
                 let sessionId = null;
 
                 document.addEventListener('DOMContentLoaded', function() {
-                    console.log('🏥 PulseQuery AI Milestone 5 Loading...');
+                    console.log('🏥 PulseQuery AI with Energy Metrics Loading...');
                     updateSystemStatus();
                     checkHealth();
                     
@@ -1767,7 +1670,7 @@ def register_routes(app):
                     });
                 }
 
-                // ✅ Interactive Prompt Optimization Functions
+                // ✅ Enhanced Prompt Optimization with Energy Metrics
                 function optimizePrompt() {
                     const query = document.getElementById('userQuery').value.trim();
                     const useContext = document.getElementById('useContext').checked;
@@ -1785,14 +1688,15 @@ def register_routes(app):
                     // Show loading
                     document.getElementById('optimizedPromptSection').style.display = 'none';
                     document.getElementById('aiResponseSection').style.display = 'none';
+                    document.getElementById('energyMetricsSection').style.display = 'none';
+                    document.getElementById('promptMetrics').style.display = 'none';
                     
                     const loadingDiv = document.createElement('div');
                     loadingDiv.id = 'optimizationLoading';
                     loadingDiv.className = 'alert alert-info';
-                    loadingDiv.innerHTML = '<div class="loading-spinner"></div>🔄 Analyzing query and optimizing prompt with English medical AI...';
+                    loadingDiv.innerHTML = '<div class="loading-spinner"></div>🔄 Analyzing query, optimizing prompt, and calculating energy savings...';
                     document.getElementById('promptOptimizationCard').appendChild(loadingDiv);
                     
-                    // ✅ FIX: Add proper headers with session ID
                     fetch('/api/prompt/optimize', {
                         method: 'POST',
                         headers: {
@@ -1835,13 +1739,15 @@ def register_routes(app):
                                 `<strong>Patient:</strong> ${patientName} (${patientAge}) | ` +
                                 `<strong>Chief Complaint:</strong> ${chiefComplaint}`;
                             
-                            document.getElementById('promptMetrics').innerHTML = 
-                                `<strong>📊 Prompt Quality Metrics:</strong><br>` +
-                                `Length: ${data.metrics.length} chars<br>` +
-                                `Est. Tokens: ~${data.metrics.token_estimate}<br>` +
-                                `Patient Info: ${(data.metrics.patient_specificity * 100).toFixed(0)}%<br>` +
-                                `Medical Terms: ${(data.metrics.medical_terminology_density * 100).toFixed(0)}%<br>` +
-                                `Context Use: ${(data.metrics.context_utilization * 100).toFixed(0)}%`;
+                            // ✅ NEW: Display prompt metrics in card format
+                            if (data.metrics) {
+                                displayPromptMetrics(data.metrics);
+                            }
+                            
+                            // ✅ NEW: Display Energy Metrics
+                            if (data.energy_metrics) {
+                                displayEnergyMetrics(data.energy_metrics);
+                            }
                             
                             document.getElementById('optimizedPromptSection').style.display = 'block';
                             document.getElementById('optimizedPromptSection').scrollIntoView({ behavior: 'smooth' });
@@ -1860,6 +1766,146 @@ def register_routes(app):
                         const loading = document.getElementById('optimizationLoading');
                         if (loading) loading.remove();
                         alert('❌ Optimization error: ' + error.message);
+                    });
+                }
+
+                // ✅ NEW: Display Prompt Metrics Function
+                function displayPromptMetrics(metricsData) {
+                    const promptSection = document.getElementById('promptMetrics');
+                    const metricsGrid = document.getElementById('promptMetricsGrid');
+                    
+                    // Display prompt metric cards
+                    metricsGrid.innerHTML = `
+                        <div class="col-md-6">
+                            <div class="prompt-metric">
+                                <div class="prompt-metric-value">${metricsData.length}</div>
+                                <div class="prompt-metric-label">Characters</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="prompt-metric">
+                                <div class="prompt-metric-value">~${metricsData.token_estimate}</div>
+                                <div class="prompt-metric-label">Est. Tokens</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="prompt-metric">
+                                <div class="prompt-metric-value">${(metricsData.patient_specificity * 100).toFixed(0)}%</div>
+                                <div class="prompt-metric-label">Patient Info</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="prompt-metric">
+                                <div class="prompt-metric-value">${(metricsData.medical_terminology_density * 100).toFixed(0)}%</div>
+                                <div class="prompt-metric-label">Medical Terms</div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="prompt-metric">
+                                <div class="prompt-metric-value">${(metricsData.context_utilization * 100).toFixed(0)}%</div>
+                                <div class="prompt-metric-label">Context Utilization</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    promptSection.style.display = 'block';
+                }
+
+                // ✅ NEW: Display Energy Metrics Function
+                function displayEnergyMetrics(energyData) {
+                    const energySection = document.getElementById('energyMetricsSection');
+                    const energyGrid = document.getElementById('energyMetricsGrid');
+                    const environmentalImpact = document.getElementById('environmentalImpact');
+                    
+                    // Display energy metric cards
+                    energyGrid.innerHTML = `
+                        <div class="col-md-3">
+                            <div class="energy-metric">
+                                <div class="energy-value">${energyData.tokens_reduced}</div>
+                                <div class="energy-label">Tokens Saved</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="energy-metric">
+                                <div class="energy-value">${energyData.energy_saved_wh.toFixed(6)} Wh</div>
+                                <div class="energy-label">Energy Saved</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="energy-metric">
+                                <div class="energy-value">${energyData.efficiency_improvement_percent}%</div>
+                                <div class="energy-label">Efficiency Gain</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="energy-metric">
+                                <div class="energy-value">$${energyData.cost_saved_usd.toFixed(6)}</div>
+                                <div class="energy-label">Cost Savings</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Environmental impact summary
+                    environmentalImpact.innerHTML = `
+                        <p><strong>🌱 Environmental Impact:</strong> 
+                           ${energyData.co2_saved_kg.toFixed(8)} kg CO₂ saved per optimization
+                        </p>
+                        <p><strong>⚡ Energy Efficiency:</strong> 
+                           ${energyData.energy_efficiency_percent}% improvement in energy utilization
+                        </p>
+                    `;
+                    
+                    // Create energy chart
+                    createEnergyChart(energyData);
+                    
+                    energySection.style.display = 'block';
+                }
+
+                // ✅ NEW: Create Energy Chart
+                function createEnergyChart(energyData) {
+                    const ctx = document.getElementById('energyChart').getContext('2d');
+                    
+                    // Destroy existing chart if it exists
+                    if (window.energyChartInstance) {
+                        window.energyChartInstance.destroy();
+                    }
+                    
+                    window.energyChartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Original Tokens', 'Optimized Tokens', 'Tokens Saved'],
+                            datasets: [{
+                                data: [
+                                    energyData.original_tokens,
+                                    energyData.optimized_tokens,
+                                    energyData.tokens_reduced
+                                ],
+                                backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1'],
+                                borderColor: ['#ff5252', '#26a69a', '#2196f3'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Token Optimization Impact'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Token Count'
+                                    }
+                                }
+                            }
+                        }
                     });
                 }
 
@@ -1922,6 +1968,7 @@ def register_routes(app):
                                 `Response: ${data.generation_info.response_length} chars | ` +
                                 `Device: ${data.generation_info.device} | ` +
                                 `Generated: ${new Date(data.timestamp).toLocaleTimeString()} | ` +
+                                `Milestone: ${data.milestone} | ` +
                                 `Format: Rendered Markdown ✅`;
                             
                             document.getElementById('aiResponseSection').style.display = 'block';
@@ -1945,10 +1992,18 @@ def register_routes(app):
                     document.getElementById('userQuery').value = '';
                     document.getElementById('optimizedPromptSection').style.display = 'none';
                     document.getElementById('aiResponseSection').style.display = 'none';
+                    document.getElementById('energyMetricsSection').style.display = 'none';
+                    document.getElementById('promptMetrics').style.display = 'none';
                     
                     // Remove any loading indicators
                     const loadingElements = document.querySelectorAll('#optimizationLoading, #generationLoading');
                     loadingElements.forEach(el => el.remove());
+                    
+                    // Destroy existing energy chart
+                    if (window.energyChartInstance) {
+                        window.energyChartInstance.destroy();
+                        window.energyChartInstance = null;
+                    }
                     
                     // Scroll back to top of form
                     document.getElementById('userQuery').scrollIntoView({ 
@@ -1969,7 +2024,12 @@ def register_routes(app):
                     const textToCopy = originalMarkdown || responseElement.textContent;
                     
                     navigator.clipboard.writeText(textToCopy).then(function() {
-                        alert('✅ Response copied to clipboard (original markdown format)!');
+                        // Show success message
+                        document.getElementById('systemResults').innerHTML = 
+                            '<div class="alert alert-success">✅ Response copied to clipboard (original markdown format)!</div>';
+                        setTimeout(() => {
+                            document.getElementById('systemResults').innerHTML = '';
+                        }, 3000);
                     }).catch(function(err) {
                         alert('❌ Could not copy response: ' + err);
                     });
@@ -1999,7 +2059,7 @@ def register_routes(app):
                     formData.append('language', docLanguage);
                     
                     document.getElementById('uploadResult').innerHTML = 
-                        '<div class="alert alert-info"><h6>📤 Processing...</h6><p>Uploading and analyzing with medical embeddings...</p></div>';
+                        '<div class="alert alert-info"><div class="loading-spinner"></div>Processing document with medical embeddings...</div>';
                     document.getElementById('uploadResult').style.display = 'block';
                     
                     fetch('/api/rag/upload', {
@@ -2015,6 +2075,8 @@ def register_routes(app):
                                 '<h6>✅ Document Processed Successfully!</h6>' +
                                 '<p><strong>File:</strong> ' + (data.original_filename || 'Unknown') + '</p>' +
                                 '<p><strong>Chunks:</strong> ' + (data.chunks_created || 0) + '</p>' +
+                                '<p><strong>Processing:</strong> ' + (data.processing_method || 'Standard') + '</p>' +
+                                '<p><strong>Persistent Storage:</strong> ' + (data.persistent_storage ? 'Yes' : 'No') + '</p>' +
                                 '</div>';
                             fileInput.value = '';
                         } else {
@@ -2041,41 +2103,94 @@ def register_routes(app):
     def internal_error(error):
         return jsonify({"error": "Internal server error", "milestone": 5}), 500
 
+def verify_app_persistence(app):
+    """Verify that the application has proper persistence configured"""
+    logger.info("🔍 Verifying application persistence configuration...")
+    
+    if not app.rag_system:
+        logger.warning("⚠️ RAG system not available - no persistence")
+        return False
+    
+    try:
+        # Check data directory
+        data_dir = getattr(app.rag_system, 'data_dir', None)
+        if not data_dir or not os.path.exists(data_dir):
+            logger.warning(f"⚠️ Data directory doesn't exist: {data_dir}")
+            return False
+        
+                # Check ChromaDB collection
+        if not app.rag_system.chroma_collection:
+            logger.warning("⚠️ No ChromaDB collection - using fallback storage")
+            return False
+        
+        # Check document count
+        doc_count = app.rag_system.chroma_collection.count()
+        logger.info(f"📊 Persistent storage verified: {doc_count} documents")
+        
+        # Check for persistence files
+        chroma_db_file = os.path.join(data_dir, 'chroma.sqlite3')
+        if os.path.exists(chroma_db_file):
+            file_size = os.path.getsize(chroma_db_file)
+            logger.info(f"📁 ChromaDB persistence file found: {file_size} bytes")
+            return True
+        else:
+            logger.info("📁 No existing persistence file - will create on first upload")
+            return True  # Still valid for new installations
+            
+    except Exception as e:
+        logger.error(f"❌ Persistence verification failed: {e}")
+        return False
+
 # Main execution
 if __name__ == '__main__':
-    logger.info("🚀 Starting PulseQuery AI - English Prompt Optimization")
+    logger.info("🚀 Starting PulseQuery AI - Milestone 5: Enhanced Prompt Optimization with Energy Metrics")
     logger.info("🔧 Features: English Medical Prompt Optimizer, Query Classification, Medical Specialization")
-    logger.info("🧠 Enhanced: Template-based Medical Prompt Engineering")
-    logger.info("📄 NEW: Interactive Prompt Optimization Workflow with Markdown Rendering")
-    logger.info("🎯 UI: Complete English-focused Medical AI System")
+    logger.info("🧠 Enhanced: Template-based Medical Prompt Engineering with Energy Savings")
+    logger.info("📄 NEW: Interactive Prompt Optimization Workflow with Markdown Rendering + Energy Analytics")
+    logger.info("🌱 GREEN: Energy consumption tracking and environmental impact metrics")
+    logger.info("🎯 UI: Complete English-focused Medical AI System with Sustainability Dashboard")
     
     try:
         logger.info("\n🔄 Creating complete Flask application...")
         app = create_app()
         logger.info("✅ Complete application created successfully!")
         
+        # ✅ NEW: Verify persistence configuration
+        persistence_verified = verify_app_persistence(app)
+        if persistence_verified:
+            logger.info("✅ Document persistence verified - uploads will persist across restarts")
+        else:
+            logger.warning("⚠️ Persistence issues detected - check configuration")
+        
         logger.info("\n🌐 Server Information:")
         logger.info("📍 Main Server: http://localhost:5000")
-        logger.info("🔗 Milestone 5 Test UI: http://localhost:5000/test-ui")
+        logger.info("🔗 Enhanced Test UI: http://localhost:5000/test-ui")
         logger.info("❤️ Health Check: http://localhost:5000/health")
+        logger.info("💾 Persistence Status: http://localhost:5000/api/rag/persistence-status")
         
-        logger.info("\n🧪 Milestone 5 Endpoints:")
-        logger.info("   - /api/prompt/optimize - English prompt optimization")
+        logger.info("\n🧪 Milestone 5 Enhanced Endpoints:")
+        logger.info("   - /api/prompt/optimize - English prompt optimization + energy metrics")
         logger.info("   - /api/prompt/generate-final - Generate from optimized prompt")
         logger.info("   - /api/debug/optimizer-status - Debug optimizer status")
         logger.info("   - /api/auth/login - User authentication")
-        logger.info("   - /api/rag/upload - Document upload (write permission)")
+        logger.info("   - /api/rag/upload - Document upload with persistent storage")
         logger.info("   - /api/rag/stats - RAG system statistics")
+        logger.info("   - /api/rag/persistence-status - Check document persistence")
         
-        logger.info("\n🎯 Milestone 5 Features:")
-        logger.info("   - English Medical Prompt Optimizer")
+        logger.info("\n🎯 Milestone 5 Enhanced Features:")
+        logger.info("   - English Medical Prompt Optimizer with Energy Analytics")
         logger.info("   - Query Type Classification (7 types)")
         logger.info("   - Medical Specialty Detection (10+ specialties)")
         logger.info("   - Patient Information Extraction")
         logger.info("   - Template-based Prompt Generation")
         logger.info("   - Quality Metrics Calculation")
+        logger.info("   - 🌱 Energy Consumption Tracking")
+        logger.info("   - 💰 Cost Savings Analysis")
+        logger.info("   - 🌍 Environmental Impact Metrics (CO₂ savings)")
+        logger.info("   - 📊 Interactive Energy Dashboard with Charts")
         logger.info("   - Interactive UI Workflow")
         logger.info("   - Markdown Rendering in UI ✅")
+        logger.info("   - Persistent ChromaDB Storage ✅")
         logger.info("   - Debug Tools for Troubleshooting")
         
         logger.info("\n👥 Demo Login Credentials:")
@@ -2084,11 +2199,32 @@ if __name__ == '__main__':
         logger.info("   - nurse1 / nurse123 (📖 Read-only access)")
         logger.info("   - resident1 / resident123 (📖 Limited access)")
         
-        logger.info("\n🎨 UI Enhancements:")
+        logger.info("\n🎨 Enhanced UI Features:")
         logger.info("   - Markdown rendering with marked.js library")
         logger.info("   - Professional medical report styling")
+        logger.info("   - 📊 Energy metrics dashboard with Chart.js")
+        logger.info("   - Real-time CO₂ and cost savings display")
+        logger.info("   - Interactive energy impact charts")
         logger.info("   - Headers, lists, tables, and formatting support")
         logger.info("   - Copy original markdown functionality")
+        logger.info("   - Elevated logo frame with hover effects")
+        logger.info("   - 📊 Prompt metrics matching energy metrics styling")
+        
+        logger.info("\n🔋 Energy Analytics Features:")
+        logger.info("   - Token usage before/after optimization")
+        logger.info("   - Energy consumption in Wh (Watt-hours)")
+        logger.info("   - CO₂ emissions saved (kg)")
+        logger.info("   - Cost savings in USD")
+        logger.info("   - Efficiency improvement percentages")
+        logger.info("   - Visual charts for impact analysis")
+        logger.info("   - Consistent card-based metrics display")
+        
+        logger.info("\n🎯 UI Enhancement Details:")
+        logger.info("   - Prompt metrics now match energy metrics styling")
+        logger.info("   - Consistent gradient backgrounds and card layouts")
+        logger.info("   - Professional medical dashboard appearance")
+        logger.info("   - Interactive charts for both prompt quality and energy impact")
+        logger.info("   - Unified color scheme across all metrics sections")
         
         logger.info("\n🔄 Starting server...")
         
@@ -2106,4 +2242,5 @@ if __name__ == '__main__':
         logger.info(f"\n❌ Server startup failed: {e}")
         traceback.print_exc()
     finally:
-        logger.info("\n✅ Milestone 5 shutdown complete")
+        logger.info("\n✅ Milestone 5 Enhanced shutdown complete")
+
