@@ -2,6 +2,8 @@ import logging
 import warnings
 from datetime import datetime, timezone
 import os
+import re
+from collections import Counter
 
 # ✅ ENHANCED: File + Console Logging Configuration
 LOG_DIR = 'log'
@@ -43,12 +45,56 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 logger = logging.getLogger(__name__)
 logger.info(f"🗂️ Logging initialized - File: {LOG_FILENAME}")
 
+# ✅ MEDICAL TERMINOLOGY DENSITY FIX
+MEDICAL_TERMS = {
+    'symptoms': ['pain', 'chest pain', 'shortness of breath', 'nausea', 'vomiting', 'dizziness', 'headache', 'fever', 'fatigue', 'weakness'],
+    'conditions': ['hypertension', 'diabetes', 'cardiac', 'cardiology', 'emergency', 'diagnosis', 'syndrome', 'disease', 'disorder'],
+    'demographics': ['patient', 'male', 'female', 'years old', 'age', 'elderly', 'adult', 'pediatric'],
+    'clinical': ['diagnosis', 'treatment', 'symptoms', 'history', 'complaint', 'medication', 'therapy', 'procedure', 'examination'],
+    'anatomy': ['heart', 'lung', 'brain', 'kidney', 'liver', 'stomach', 'chest', 'abdomen', 'extremities'],
+    'medical_specialty': ['cardiology', 'neurology', 'gastroenterology', 'emergency', 'internal medicine', 'surgery'],
+    'vitals': ['blood pressure', 'heart rate', 'temperature', 'respiratory rate', 'oxygen saturation', 'pulse'],
+    'assessments': ['workup', 'evaluation', 'assessment', 'monitoring', 'follow-up', 'consultation']
+}
+
+def calculate_medical_terminology_density(text):
+    """Calculate medical term density in text"""
+    if not text or len(text.strip()) == 0:
+        return 0.0
+    
+    # Tokenize text
+    tokens = text.lower().split()
+    total_tokens = len(tokens)
+    
+    if total_tokens == 0:
+        return 0.0
+    
+    # Count medical terms
+    medical_term_count = 0
+    all_medical_terms = []
+    
+    # Flatten medical terms dictionary
+    for category, terms in MEDICAL_TERMS.items():
+        all_medical_terms.extend(terms)
+    
+    # Count occurrences
+    text_lower = text.lower()
+    for term in all_medical_terms:
+        if term in text_lower:
+            # Count word boundaries to avoid partial matches
+            pattern = r'\b' + re.escape(term) + r'\b'
+            matches = len(re.findall(pattern, text_lower))
+            medical_term_count += matches
+    
+    # Calculate density
+    density = (medical_term_count / total_tokens) * 100
+    return min(density, 100.0)  # Cap at 100%
+
 from flask import Flask, jsonify, render_template_string, request, session
 import tempfile
 import time
 import uuid
 import gc
-import re
 import traceback
 from config.config import config
 
@@ -265,8 +311,8 @@ def register_routes(app):
         return jsonify({
             "message": "🔬 PulseQuery AI - Complete Medical System",
             "status": "Running",
-            "milestone": 5,
-            "enhancement": "English Prompt Optimization System with Energy Metrics",
+            "milestone": 5.2,
+            "enhancement": "Enhanced Before/After Comparison Metrics + Medical Term Detection",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "authenticated": user_info is not None,
             "user": user_info,
@@ -277,10 +323,12 @@ def register_routes(app):
                 "prompt_optimizer": prompt_optimizer_status,
                 "auth_service": "✅ Ready" if app.auth_service else "❌ Failed",
                 "session_manager": "✅ Ready" if app.session_manager else "❌ Failed",
-                "enhanced_prompts": "✅ V2.0 Enabled",
+                "enhanced_prompts": "✅ V2.2 Enabled",
                 "document_upload": "✅ Available" if app.rag_system else "❌ RAG Required",
                 "medical_embeddings": "✅ Enabled" if app.rag_system else "❌ Not Available",
-                "energy_metrics": "✅ Enabled"
+                "energy_metrics": "✅ Enabled",
+                "medical_term_detection": "✅ Fixed",
+                "comparison_metrics": "✅ Before/After Display"
             }
         })
 
@@ -315,7 +363,7 @@ def register_routes(app):
                 "message": "Login successful",
                 "user": user_info,
                 "session_id": session_id,
-                "milestone": 5
+                "milestone": 5.2
             })
             
         except Exception as e:
@@ -337,7 +385,7 @@ def register_routes(app):
             return jsonify({
                 "success": True,
                 "message": "Logout successful",
-                "milestone": 5
+                "milestone": 5.2
             })
             
         except Exception as e:
@@ -361,7 +409,7 @@ def register_routes(app):
                 "auth_service": "✅ Ready" if app.auth_service else "❌ Failed",
                 "session_manager": "✅ Ready" if app.session_manager else "❌ Failed",
             },
-            "milestone": 5,
+            "milestone": 5.2,
             "debug_info": {
                 "RAG_AVAILABLE": RAG_AVAILABLE,
                 "MEDGEMMA_AVAILABLE": MEDGEMMA_AVAILABLE,
@@ -474,7 +522,7 @@ def register_routes(app):
         try:
             status = app.medgemma.get_loading_status()
             return jsonify({
-                "milestone": 5,
+                "milestone": 5.2,
                 **status,
                 "gpu_support": "Enabled",
                 "model_file": "medgemma-4b-it-Q8_0.gguf"
@@ -483,15 +531,15 @@ def register_routes(app):
             return jsonify({
                 "status": "error",
                 "error": str(e),
-                "milestone": 5
+                "milestone": 5.2
             })
 
-    # ✅ ENHANCED Prompt Optimization Endpoint WITH ENERGY METRICS
+    # ✅ ENHANCED Prompt Optimization Endpoint WITH BEFORE/AFTER COMPARISON
     @app.route('/api/prompt/optimize', methods=['POST'])
     @require_auth(app.session_manager)  
     def optimize_prompt():
-        """Optimize medical prompt with enhanced energy saving metrics calculation"""
-        logger.info("🧠 PROMPT OPTIMIZATION WITH ENERGY METRICS ENDPOINT CALLED")
+        """Optimize medical prompt with enhanced energy saving metrics calculation and before/after comparison"""
+        logger.info("🧠 PROMPT OPTIMIZATION WITH BEFORE/AFTER COMPARISON ENDPOINT CALLED")
         
         try:
             data = request.get_json()
@@ -520,6 +568,15 @@ def register_routes(app):
                 except Exception as context_error:
                     logger.warning(f"⚠️ Context search failed: {context_error}")
                     context_docs = []
+            
+            # ✅ Calculate original query metrics BEFORE optimization
+            original_metrics = {
+                'length': len(query),
+                'token_estimate': int(len(query.split()) * 1.3),
+                'medical_terminology_density': calculate_medical_terminology_density(query) / 100.0,
+                'context_utilization': 0.0,
+                'patient_specificity': 0.0
+            }
             
             # ✅ Enhanced error handling for optimization with query preservation
             try:
@@ -585,6 +642,9 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 
                 efficiency_improvement = (token_reduction / original_tokens) * 100 if original_tokens > 0 else 0
                 
+                # ✅ FIXED: Calculate medical terminology density
+                medical_density = calculate_medical_terminology_density(fallback_prompt)
+                
                 return jsonify({
                     'success': True,
                     'original_query': query,
@@ -592,12 +652,13 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                     'query_type': 'symptom_analysis',
                     'medical_specialty': 'general_medicine',
                     'patient_info': {'name': None, 'age': None, 'gender': None, 'chief_complaint': None},
+                    'original_metrics': original_metrics,
                     'metrics': {
                         'length': len(fallback_prompt), 
                         'token_estimate': int(fallback_tokens), 
                         'context_utilization': 0.0, 
                         'patient_specificity': 0.0, 
-                        'medical_terminology_density': 0.3
+                        'medical_terminology_density': medical_density / 100.0  # Convert to decimal
                     },
                     'energy_metrics': {
                         'original_tokens': int(original_tokens),
@@ -611,9 +672,11 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                     },
                     'context_docs_used': len(context_docs),
                     'optimized_by': request.current_user["user_name"],
-                    'milestone': 5,
+                    'milestone': 5.2,
                     'fallback_used': True,
-                    'optimization_error': str(opt_error)
+                    'optimization_error': str(opt_error),
+                    'medical_term_fix_applied': True,
+                    'comparison_enabled': True
                 })
             
             # ✅ NEW: ENERGY METRICS CALCULATION
@@ -638,7 +701,7 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 efficiency_improvement = 0
                 energy_efficiency = 0
             
-            # ✅ FIX: Safe attribute access with proper error handling
+            # ✅ FIX: Safe attribute access with proper error handling + MEDICAL TERM DENSITY FIX
             try:
                 # Safe extraction of patient info
                 patient_info = result.get('patient_info')
@@ -651,24 +714,32 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 
                 # Safe extraction of metrics
                 metrics = result.get('metrics')
+                
+                # ✅ FIXED: Calculate medical terminology density properly
+                optimized_prompt_text = result.get('optimized_prompt', '')
+                medical_density = calculate_medical_terminology_density(optimized_prompt_text)
+                
                 metrics_data = {
-                    'length': getattr(metrics, 'length', 0) if metrics else 0,
-                    'token_estimate': getattr(metrics, 'token_estimate', 0) if metrics else 0,
-                    'context_utilization': getattr(metrics, 'context_utilization', 0.0) if metrics else 0.0,
+                    'length': getattr(metrics, 'length', 0) if metrics else len(optimized_prompt_text),
+                    'token_estimate': getattr(metrics, 'token_estimate', 0) if metrics else int(len(optimized_prompt_text.split()) * 1.3),
+                    'context_utilization': getattr(metrics, 'context_utilization', 0.0) if metrics else (len(context_docs) / 3.0 if context_docs else 0.0),
                     'patient_specificity': getattr(metrics, 'patient_specificity', 0.0) if metrics else 0.0,
-                    'medical_terminology_density': getattr(metrics, 'medical_terminology_density', 0.0) if metrics else 0.0
+                    'medical_terminology_density': medical_density / 100.0  # Convert to decimal (0-1 range)
                 }
                 
             except Exception as attr_error:
                 logger.warning(f"⚠️ Attribute extraction failed: {attr_error}")
-                # Fallback values
+                # Fallback values with medical term calculation
+                optimized_prompt_text = result.get('optimized_prompt', '')
+                medical_density = calculate_medical_terminology_density(optimized_prompt_text)
+                
                 patient_data = {'name': None, 'age': None, 'gender': None, 'chief_complaint': None}
                 metrics_data = {
-                    'length': len(result.get('optimized_prompt', '')),
-                    'token_estimate': len(result.get('optimized_prompt', ''))//4,
-                    'context_utilization': 0.0,
+                    'length': len(optimized_prompt_text),
+                    'token_estimate': len(optimized_prompt_text.split()),
+                    'context_utilization': len(context_docs) / 3.0 if context_docs else 0.0,
                     'patient_specificity': 0.0,
-                    'medical_terminology_density': 0.0
+                    'medical_terminology_density': medical_density / 100.0  # Convert to decimal
                 }
             
             # ✅ FINAL VALIDATION: Ensure optimized prompt contains the query
@@ -696,7 +767,8 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 'query_type': result.get('query_type', 'general_medical'),
                 'medical_specialty': result.get('medical_specialty', 'general_medicine'),
                 'patient_info': patient_data,
-                'metrics': metrics_data,
+                'original_metrics': original_metrics,  # ✅ NEW: Original query metrics
+                'metrics': metrics_data,  # ✅ Optimized prompt metrics
                 # ✅ NEW: Energy and efficiency metrics
                 'energy_metrics': {
                     'original_tokens': int(original_tokens),
@@ -710,15 +782,18 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 },
                 'context_docs_used': len(context_docs),
                 'optimized_by': request.current_user["user_name"],
-                'milestone': 5,
+                'milestone': 5.2,
                 'has_optimization_warning': 'error' in result,
-                'query_preservation_check': len(common_words) >= 2
+                'query_preservation_check': len(common_words) >= 2,
+                'medical_term_fix_applied': True,
+                'comparison_enabled': True  # ✅ NEW: Enable before/after comparison
             }
             
             logger.info(f"📤 Sending response with {len(response_data['optimized_prompt'])} char prompt")
             logger.info(f"🔋 Energy saved: {response_data['energy_metrics']['energy_saved_wh']:.6f} Wh")
             logger.info(f"🌱 CO2 saved: {response_data['energy_metrics']['co2_saved_kg']:.8f} kg")
             logger.info(f"💰 Cost saved: ${response_data['energy_metrics']['cost_saved_usd']:.6f}")
+            logger.info(f"🩺 Medical density: Original {original_metrics['medical_terminology_density']*100:.1f}% → Optimized {metrics_data['medical_terminology_density']*100:.1f}%")
             
             return jsonify(response_data)
             
@@ -735,28 +810,16 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 'query_type': 'general_medical',
                 'medical_specialty': 'general_medicine',
                 'patient_info': {'name': None, 'age': None, 'gender': None, 'chief_complaint': None},
-                'metrics': {
-                    'length': 0,
-                    'token_estimate': 0,
-                    'context_utilization': 0.0,
-                    'patient_specificity': 0.0,
-                    'medical_terminology_density': 0.0
-                },
-                'energy_metrics': {
-                    'original_tokens': 0,
-                    'optimized_tokens': 0,
-                    'tokens_reduced': 0,
-                    'energy_saved_wh': 0.0,
-                    'co2_saved_kg': 0.0,
-                    'cost_saved_usd': 0.0,
-                    'efficiency_improvement_percent': 0.0,
-                    'energy_efficiency_percent': 0.0
-                },
+                'original_metrics': {'length': 0, 'token_estimate': 0, 'context_utilization': 0.0, 'patient_specificity': 0.0, 'medical_terminology_density': 0.0},
+                'metrics': {'length': 0, 'token_estimate': 0, 'context_utilization': 0.0, 'patient_specificity': 0.0, 'medical_terminology_density': 0.0},
+                'energy_metrics': {'original_tokens': 0, 'optimized_tokens': 0, 'tokens_reduced': 0, 'energy_saved_wh': 0.0, 'co2_saved_kg': 0.0, 'cost_saved_usd': 0.0, 'efficiency_improvement_percent': 0.0, 'energy_efficiency_percent': 0.0},
                 'context_docs_used': 0,
                 'optimized_by': 'System',
-                'milestone': 5,
+                'milestone': 5.2,
                 'endpoint_error': True,
-                'error_message': str(e)
+                'error_message': str(e),
+                'medical_term_fix_applied': False,
+                'comparison_enabled': False
             }
             
             return jsonify(fallback_response), 200  # Return 200 to avoid breaking UI
@@ -831,7 +894,7 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 },
                 'generated_by': request.current_user["user_name"],
                 'timestamp': datetime.now().isoformat(),
-                'milestone': 5
+                'milestone': 5.2
             })
             
         except Exception as e:
@@ -855,7 +918,7 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
         try:
             stats = app.rag_system.get_system_stats()
             return jsonify({
-                "milestone": 5,
+                "milestone": 5.2,
                 "rag_stats": stats,
                 "accessed_by": request.current_user["user_name"],
                 "embedding_info": {
@@ -937,7 +1000,7 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 return jsonify({
                     "success": result.get('success', True),
                     "message": "Document uploaded and processed successfully",
-                    "milestone": 5,
+                    "milestone": 5.2,
                     **result
                 })
                 
@@ -956,17 +1019,17 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 }
             }), 500
 
-    # ✅ Enhanced Test UI with ENERGY METRICS DISPLAY
+    # ✅ Enhanced Test UI with BEFORE/AFTER COMPARISON METRICS
     @app.route('/test-ui')
     def test_ui():
-        """Complete test interface with energy metrics display"""
+        """Complete test interface with enhanced before/after comparison metrics display"""
         return """
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>PulseQuery AI - Prompt Optimization with Energy Metrics</title>
+            <title>PulseQuery AI - Before/After Comparison + Energy Metrics</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
             <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1049,13 +1112,139 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                     font-size: 0.9em;
                 }
                 
-                /* ✅ UPDATED: Prompt Metrics styling to match Energy Metrics */
+                /* ✅ Energy Metrics styling */
+                .energy-metrics {
+                    background: linear-gradient(135deg, #e8f5e8, #f0f9ff);
+                    border: 1px solid #4caf50;
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin: 16px 0;
+                }
+
+                .energy-metric {
+                    background: white;
+                    border: 1px solid #e1f5fe;
+                    border-radius: 6px;
+                    padding: 10px;
+                    margin: 5px;
+                    text-align: center;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+
+                .energy-value {
+                    font-size: 1.2rem;
+                    font-weight: 600;
+                    color: #1976d2;
+                }
+
+                .energy-label {
+                    font-size: 0.8rem;
+                    color: #666;
+                    margin-top: 4px;
+                }
+
+                .energy-metrics h6 {
+                    color: #2e7d32;
+                    margin-bottom: 16px;
+                    font-weight: 600;
+                }
+                
+                /* ✅ NEW: Before/After Comparison Styling */
                 .prompt-metrics {
                     background: linear-gradient(135deg, #e8f5e8, #f0f9ff);
                     border: 1px solid #4caf50;
                     border-radius: 8px;
                     padding: 16px;
                     margin: 16px 0;
+                }
+
+                .prompt-metrics h6 {
+                    color: #2e7d32;
+                    margin-bottom: 16px;
+                    font-weight: 600;
+                }
+
+                .metric-comparison-card {
+                    background: white;
+                    border: 1px solid #e1f5fe;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin: 5px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                }
+
+                .metric-label {
+                    font-weight: 600;
+                    color: #2e7d32;
+                    margin-bottom: 10px;
+                    text-align: center;
+                    font-size: 0.9rem;
+                }
+
+                .comparison-row {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .before-metric, .after-metric {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 5px 8px;
+                    border-radius: 4px;
+                }
+
+                .before-metric {
+                    background-color: #fff3e0;
+                    border-left: 3px solid #ff9800;
+                }
+
+                .after-metric {
+                    background-color: #e8f5e8;
+                    border-left: 3px solid #4caf50;
+                }
+
+                .before-metric .label {
+                    font-size: 0.8rem;
+                    color: #e65100;
+                    font-weight: 500;
+                }
+
+                .after-metric .label {
+                    font-size: 0.8rem;
+                    color: #2e7d32;
+                    font-weight: 500;
+                }
+
+                .before-metric .value, .after-metric .value {
+                    font-weight: 600;
+                    font-size: 1rem;
+                }
+
+                .change-indicator {
+                    text-align: center;
+                    font-weight: 600;
+                    font-size: 0.85rem;
+                    padding: 3px 6px;
+                    border-radius: 12px;
+                    margin-top: 5px;
+                }
+
+                .change-indicator.increase {
+                    background-color: #e8f5e8;
+                    color: #2e7d32;
+                }
+
+                .change-indicator.decrease {
+                    background-color: #fff3e0;
+                    color: #e65100;
+                }
+
+                .comparison-header {
+                    border-bottom: 2px solid #4caf50;
+                    padding-bottom: 10px;
+                    margin-bottom: 15px;
                 }
 
                 .prompt-metric {
@@ -1079,38 +1268,7 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                     color: #666;
                     margin-top: 4px;
                 }
-
-                .prompt-metrics h6 {
-                    color: #2e7d32;
-                    margin-bottom: 16px;
-                    font-weight: 600;
-                }
                 
-                /* ✅ NEW: Energy Metrics Styling */
-                .energy-metrics {
-                    background: linear-gradient(135deg, #e8f5e8, #f0f9ff);
-                    border: 1px solid #4caf50;
-                    border-radius: 8px;
-                    padding: 16px;
-                    margin: 16px 0;
-                }
-                .energy-metric {
-                    background: white;
-                    border: 1px solid #e1f5fe;
-                    border-radius: 6px;
-                    padding: 10px;
-                    margin: 5px;
-                    text-align: center;
-                }
-                .energy-value {
-                    font-size: 1.2rem;
-                    font-weight: 600;
-                    color: #1976d2;
-                }
-                .energy-label {
-                    font-size: 0.8rem;
-                    color: #666;
-                }
                 .environmental-impact {
                     background: rgba(76, 175, 80, 0.1);
                     border-left: 4px solid #4caf50;
@@ -1265,6 +1423,17 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                     font-weight: 600;
                     color: #2c3e50;
                 }
+
+                /* ✅ COMPARISON INDICATOR */
+                .comparison-indicator {
+                    background: rgba(40, 167, 69, 0.1);
+                    border: 1px solid #28a745;
+                    border-radius: 4px;
+                    padding: 8px 12px;
+                    margin: 8px 0;
+                    font-size: 0.85em;
+                    color: #155724;
+                }
             </style>
         </head>
         <body>
@@ -1278,18 +1447,18 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                         </div>
                         <div class="header-content">
                             <h1 class="main-title">PulseQuery AI</h1>
-                            <p class="subtitle">Advanced Medical Intelligence Platform with Energy Optimization</p>
+                            <p class="subtitle">Advanced Medical Intelligence Platform with Before/After Comparison Metrics</p>
                         </div>
                     </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Version:</strong> 5.0 - Clinical Intelligence Platform</p>
+                            <p><strong>Version:</strong> 5.2 - Clinical Intelligence Platform</p>
                             <p><strong>Status:</strong> <span id="systemStatus" class="status-badge">Checking...</span></p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Core Capabilities:</strong> Smart Query Analysis • Medical AI • Patient Data Extraction • Energy Optimization</p>
-                            <p><strong>Latest:</strong> Enhanced Prompt Engineering + Energy Metrics + Markdown Support</p>
+                            <p><strong>Core Capabilities:</strong> Smart Query Analysis • Medical AI • Patient Data Extraction • Energy Optimization • Before/After Comparison</p>
+                            <p><strong>Latest:</strong> Enhanced Before/After Comparison Metrics + Energy Analytics</p>
                         </div>
                     </div>
                 </div>
@@ -1327,17 +1496,17 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                     <small class="text-muted mt-2">Demo Passwords: password123, admin123, nurse123, resident123</small>
                 </div>
 
-                <!-- ✅ AI-Assisted Medical Query Processing with Energy Metrics -->
+                <!-- ✅ AI-Assisted Medical Query Processing with BEFORE/AFTER COMPARISON -->
                 <div class="card" id="promptOptimizationCard" style="display: none;">
                     <div class="card-header">
-                        <h5>🧠 AI-Assisted Prompt Optimization with Energy Metrics</h5>
-                        <small>Submit medical query → AI optimizes prompt → Review & edit → Generate detailed insights → View energy savings</small>
+                        <h5>🧠 AI-Assisted Prompt Optimization with Before/After Comparison</h5>
+                        <small>Submit medical query → AI optimizes prompt → View before/after comparison → Review & edit → Generate detailed insights</small>
                     </div>                    
                     <!-- Step 1: User Query Input -->
                     <div class="mb-4">
                         <label class="form-label"><strong>Step 1: Enter Medical Query</strong></label>
                         <textarea id="userQuery" class="form-control" rows="4" 
-                                  placeholder="Enter your medical query here...&#10;&#10;Examples:&#10;• Patient Name: Rogers, Pamela, Age: 56, Chief Complaint: Chest pain and shortness of breath&#10;• 45-year-old male with diabetes presenting with foot ulcer&#10;• Patient with history of hypertension needs treatment plan review"></textarea>
+                                  placeholder="Enter your medical query here...&#10;&#10;Examples:&#10;• Patient Maria Rodriguez, 67 years old, chest pain and shortness of breath&#10;• 45-year-old male with diabetes presenting with foot ulcer&#10;• Patient with hypertension needs cardiology consultation"></textarea>
                         <div class="mt-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="useContext" checked>
@@ -1348,7 +1517,7 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                         </div>
                         <div class="mt-3">
                             <button class="btn btn-primary btn-lg" onclick="optimizePrompt()">
-                                🔍 Optimize Prompt with Energy Analysis
+                                🔍 Optimize Prompt with Before/After Analysis
                             </button>
                         </div>
                     </div>
@@ -1359,7 +1528,12 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                         <label class="form-label"><strong>Step 2: Review & Edit Optimized Prompt</strong></label>
                         <div class="optimization-info" id="optimizationInfo"></div>
                         
-                        <!-- ✅ NEW: Energy Metrics Display -->
+                        <!-- ✅ COMPARISON INDICATOR -->
+                        <div id="comparisonIndicator" class="comparison-indicator" style="display: none;">
+                            <i class="fas fa-chart-bar"></i> <strong>Before/After Comparison Enabled:</strong> See detailed metrics comparison below showing original vs optimized prompt characteristics.
+                        </div>
+                        
+                        <!-- ✅ ORDER 1: Energy Metrics FIRST -->
                         <div id="energyMetricsSection" class="energy-metrics" style="display: none;">
                             <h6><i class="fas fa-leaf"></i> 🌱 Optimization Energy Impact</h6>
                             <div class="row" id="energyMetricsGrid">
@@ -1368,32 +1542,31 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                             <div class="environmental-impact" id="environmentalImpact">
                                 <!-- Environmental impact summary -->
                             </div>
-                            <canvas id="energyChart" width="400" height="150" style="margin-top: 10px;"></canvas>
+                        </div>
+                        
+                        <!-- ✅ ORDER 2: Prompt Comparison Metrics SECOND -->
+                        <div id="promptMetrics" class="prompt-metrics" style="display: none;">
+                            <h6><i class="fas fa-chart-line"></i> 📊 Before vs After Prompt Comparison</h6>
+                            <div class="row" id="promptMetricsGrid">
+                                <!-- Comparison metrics will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <!-- ✅ ORDER 3: Energy Chart THIRD -->
+                        <div id="energyChartSection" style="display: none; margin: 16px 0;">
+                            <canvas id="energyChart" width="400" height="150"></canvas>
                         </div>
                         
                         <textarea id="optimizedPrompt" class="form-control" rows="15" 
                                   placeholder="Optimized prompt will appear here..."></textarea>
                         
                         <div class="mt-3">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <button class="btn btn-success btn-lg" onclick="generateFromPrompt()">
-                                        🤖 Generate AI Response
-                                    </button>
-                                    <button class="btn btn-secondary" onclick="resetOptimization()">
-                                        🔄 Start Over
-                                    </button>
-                                </div>
-                                <div class="col-md-4">
-                                    <!-- ✅ UPDATED: New prompt metrics display matching energy metrics style -->
-                                    <div id="promptMetrics" class="prompt-metrics" style="display: none;">
-                                        <h6><i class="fas fa-chart-line"></i> 📊 Prompt Quality Metrics</h6>
-                                        <div class="row" id="promptMetricsGrid">
-                                            <!-- Metrics cards will be populated here -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <button class="btn btn-success btn-lg" onclick="generateFromPrompt()">
+                                🤖 Generate AI Response
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetOptimization()">
+                                🔄 Start Over
+                            </button>
                         </div>
                     </div>
                     
@@ -1455,8 +1628,8 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 <!-- Footer -->
                 <div class="card">
                     <div class="text-center">
-                        <p class="mb-2"><strong>PulseQuery AI v5.0</strong></p>
-                        <p class="mb-0 text-muted">Empowering Healthcare with AI-Driven Insights & Energy Optimization</p>
+                        <p class="mb-2"><strong>PulseQuery AI v5.2 - Before/After Comparison Enhanced</strong></p>
+                        <p class="mb-0 text-muted">Empowering Healthcare with AI-Driven Insights, Energy Optimization & Detailed Comparison Analytics</p>
                     </div>
                 </div>
             </div>
@@ -1467,7 +1640,7 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                 let sessionId = null;
 
                 document.addEventListener('DOMContentLoaded', function() {
-                    console.log('🏥 PulseQuery AI with Energy Metrics Loading...');
+                    console.log('🏥 PulseQuery AI with Before/After Comparison Loading...');
                     updateSystemStatus();
                     checkHealth();
                     
@@ -1670,7 +1843,7 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                     });
                 }
 
-                // ✅ Enhanced Prompt Optimization with Energy Metrics
+                // ✅ Enhanced Prompt Optimization with BEFORE/AFTER COMPARISON
                 function optimizePrompt() {
                     const query = document.getElementById('userQuery').value.trim();
                     const useContext = document.getElementById('useContext').checked;
@@ -1690,11 +1863,13 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                     document.getElementById('aiResponseSection').style.display = 'none';
                     document.getElementById('energyMetricsSection').style.display = 'none';
                     document.getElementById('promptMetrics').style.display = 'none';
+                    document.getElementById('energyChartSection').style.display = 'none';
+                    document.getElementById('comparisonIndicator').style.display = 'none';
                     
                     const loadingDiv = document.createElement('div');
                     loadingDiv.id = 'optimizationLoading';
                     loadingDiv.className = 'alert alert-info';
-                    loadingDiv.innerHTML = '<div class="loading-spinner"></div>🔄 Analyzing query, optimizing prompt, and calculating energy savings...';
+                    loadingDiv.innerHTML = '<div class="loading-spinner"></div>🔄 Analyzing query, optimizing prompt, calculating energy savings, and preparing before/after comparison...';
                     document.getElementById('promptOptimizationCard').appendChild(loadingDiv);
                     
                     fetch('/api/prompt/optimize', {
@@ -1739,14 +1914,22 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                                 `<strong>Patient:</strong> ${patientName} (${patientAge}) | ` +
                                 `<strong>Chief Complaint:</strong> ${chiefComplaint}`;
                             
-                            // ✅ NEW: Display prompt metrics in card format
-                            if (data.metrics) {
-                                displayPromptMetrics(data.metrics);
+                            // ✅ Show comparison indicator if enabled
+                            if (data.comparison_enabled) {
+                                document.getElementById('comparisonIndicator').style.display = 'block';
                             }
                             
-                            // ✅ NEW: Display Energy Metrics
+                            // ✅ Display in sequence Energy → Prompt Comparison → Chart
                             if (data.energy_metrics) {
                                 displayEnergyMetrics(data.energy_metrics);
+                            }
+                            
+                            if (data.metrics && data.original_metrics) {
+                                displayPromptMetricsComparison(query, data.optimized_prompt, data.original_metrics, data.metrics);
+                            }
+                            
+                            if (data.energy_metrics) {
+                                createEnergyChart(data.energy_metrics);
                             }
                             
                             document.getElementById('optimizedPromptSection').style.display = 'block';
@@ -1769,49 +1952,7 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                     });
                 }
 
-                // ✅ NEW: Display Prompt Metrics Function
-                function displayPromptMetrics(metricsData) {
-                    const promptSection = document.getElementById('promptMetrics');
-                    const metricsGrid = document.getElementById('promptMetricsGrid');
-                    
-                    // Display prompt metric cards
-                    metricsGrid.innerHTML = `
-                        <div class="col-md-6">
-                            <div class="prompt-metric">
-                                <div class="prompt-metric-value">${metricsData.length}</div>
-                                <div class="prompt-metric-label">Characters</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="prompt-metric">
-                                <div class="prompt-metric-value">~${metricsData.token_estimate}</div>
-                                <div class="prompt-metric-label">Est. Tokens</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="prompt-metric">
-                                <div class="prompt-metric-value">${(metricsData.patient_specificity * 100).toFixed(0)}%</div>
-                                <div class="prompt-metric-label">Patient Info</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="prompt-metric">
-                                <div class="prompt-metric-value">${(metricsData.medical_terminology_density * 100).toFixed(0)}%</div>
-                                <div class="prompt-metric-label">Medical Terms</div>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="prompt-metric">
-                                <div class="prompt-metric-value">${(metricsData.context_utilization * 100).toFixed(0)}%</div>
-                                <div class="prompt-metric-label">Context Utilization</div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    promptSection.style.display = 'block';
-                }
-
-                // ✅ NEW: Display Energy Metrics Function
+                // ✅ Display Energy Metrics Function
                 function displayEnergyMetrics(energyData) {
                     const energySection = document.getElementById('energyMetricsSection');
                     const energyGrid = document.getElementById('energyMetricsGrid');
@@ -1851,17 +1992,119 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                            ${energyData.co2_saved_kg.toFixed(8)} kg CO₂ saved per optimization
                         </p>
                         <p><strong>⚡ Energy Efficiency:</strong> 
-                           ${energyData.energy_efficiency_percent}% improvement in energy utilization
+                           ${energyData.energy_efficiency_percent}% improvement in                            energy utilization
                         </p>
                     `;
-                    
-                    // Create energy chart
-                    createEnergyChart(energyData);
                     
                     energySection.style.display = 'block';
                 }
 
-                // ✅ NEW: Create Energy Chart
+                // ✅ Enhanced Display Function - Show Before vs After Comparison
+                function displayPromptMetricsComparison(originalQuery, optimizedPrompt, originalMetrics, optimizedMetrics) {
+                    const promptSection = document.getElementById('promptMetrics');
+                    const metricsGrid = document.getElementById('promptMetricsGrid');
+                    
+                    // Calculate original query metrics
+                    const originalLength = originalMetrics.length || originalQuery.length;
+                    const originalTokens = originalMetrics.token_estimate || Math.round(originalQuery.split().length * 1.3);
+                    const originalMedicalDensity = Math.round((originalMetrics.medical_terminology_density || 0) * 100);
+                    
+                    // Get optimized metrics
+                    const optimizedLength = optimizedMetrics.length || 0;
+                    const optimizedTokens = optimizedMetrics.token_estimate || 0;
+                    const optimizedMedicalDensity = Math.round((optimizedMetrics.medical_terminology_density || 0) * 100);
+                    
+                    // Calculate improvements
+                    const lengthChange = optimizedLength - originalLength;
+                    const tokenChange = optimizedTokens - originalTokens;
+                    const medicalChange = optimizedMedicalDensity - originalMedicalDensity;
+                    
+                    metricsGrid.innerHTML = `
+                        <div class="col-12 mb-3">
+                            <div class="comparison-header">
+                                <h6 class="text-center mb-3">📊 Before vs After Comparison</h6>
+                            </div>
+                        </div>
+                        
+                        <!-- Character Count Comparison -->
+                        <div class="col-md-4">
+                            <div class="metric-comparison-card">
+                                <div class="metric-label">Characters</div>
+                                <div class="comparison-row">
+                                    <div class="before-metric">
+                                        <span class="label">Before:</span>
+                                        <span class="value">${originalLength}</span>
+                                    </div>
+                                    <div class="after-metric">
+                                        <span class="label">After:</span>
+                                        <span class="value">${optimizedLength}</span>
+                                    </div>
+                                    <div class="change-indicator ${lengthChange >= 0 ? 'increase' : 'decrease'}">
+                                        ${lengthChange >= 0 ? '+' : ''}${lengthChange}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Token Count Comparison -->
+                        <div class="col-md-4">
+                            <div class="metric-comparison-card">
+                                <div class="metric-label">Est. Tokens</div>
+                                <div class="comparison-row">
+                                    <div class="before-metric">
+                                        <span class="label">Before:</span>
+                                        <span class="value">~${originalTokens}</span>
+                                    </div>
+                                    <div class="after-metric">
+                                        <span class="label">After:</span>
+                                        <span class="value">~${optimizedTokens}</span>
+                                    </div>
+                                    <div class="change-indicator ${tokenChange >= 0 ? 'increase' : 'decrease'}">
+                                        ${tokenChange >= 0 ? '+' : ''}${tokenChange}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Medical Terms Density -->
+                        <div class="col-md-4">
+                            <div class="metric-comparison-card">
+                                <div class="metric-label">Medical Terms</div>
+                                <div class="comparison-row">
+                                    <div class="before-metric">
+                                        <span class="label">Before:</span>
+                                        <span class="value">${originalMedicalDensity}%</span>
+                                    </div>
+                                    <div class="after-metric">
+                                        <span class="label">After:</span>
+                                        <span class="value" style="color: ${optimizedMedicalDensity > 0 ? '#28a745' : '#dc3545'}">${optimizedMedicalDensity}%</span>
+                                    </div>
+                                    <div class="change-indicator ${medicalChange >= 0 ? 'increase' : 'decrease'}">
+                                        ${medicalChange >= 0 ? '+' : ''}${medicalChange}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Patient Info & Context (After only) -->
+                        <div class="col-md-6">
+                            <div class="prompt-metric">
+                                <div class="prompt-metric-value">${Math.round((optimizedMetrics.patient_specificity || 0) * 100)}%</div>
+                                <div class="prompt-metric-label">Patient Info Extracted</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="prompt-metric">
+                                <div class="prompt-metric-value">${Math.round((optimizedMetrics.context_utilization || 0) * 100)}%</div>
+                                <div class="prompt-metric-label">Context Utilization</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    promptSection.style.display = 'block';
+                }
+
+                // ✅ Create Energy Chart (positioned below both metrics sections)
                 function createEnergyChart(energyData) {
                     const ctx = document.getElementById('energyChart').getContext('2d');
                     
@@ -1907,6 +2150,9 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                             }
                         }
                     });
+                    
+                    // Show the chart container
+                    document.getElementById('energyChartSection').style.display = 'block';
                 }
 
                 // ✅ ENHANCED: Generate with MARKDOWN RENDERING
@@ -1994,6 +2240,8 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
                     document.getElementById('aiResponseSection').style.display = 'none';
                     document.getElementById('energyMetricsSection').style.display = 'none';
                     document.getElementById('promptMetrics').style.display = 'none';
+                    document.getElementById('energyChartSection').style.display = 'none';
+                    document.getElementById('comparisonIndicator').style.display = 'none';
                     
                     // Remove any loading indicators
                     const loadingElements = document.querySelectorAll('#optimizationLoading, #generationLoading');
@@ -2097,11 +2345,11 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
-        return jsonify({"error": "Endpoint not found", "milestone": 5}), 404
+        return jsonify({"error": "Endpoint not found", "milestone": 5.2}), 404
 
     @app.errorhandler(500)
     def internal_error(error):
-        return jsonify({"error": "Internal server error", "milestone": 5}), 500
+        return jsonify({"error": "Internal server error", "milestone": 5.2}), 500
 
 def verify_app_persistence(app):
     """Verify that the application has proper persistence configured"""
@@ -2118,7 +2366,7 @@ def verify_app_persistence(app):
             logger.warning(f"⚠️ Data directory doesn't exist: {data_dir}")
             return False
         
-                # Check ChromaDB collection
+        # Check ChromaDB collection
         if not app.rag_system.chroma_collection:
             logger.warning("⚠️ No ChromaDB collection - using fallback storage")
             return False
@@ -2143,12 +2391,14 @@ def verify_app_persistence(app):
 
 # Main execution
 if __name__ == '__main__':
-    logger.info("🚀 Starting PulseQuery AI - Milestone 5: Enhanced Prompt Optimization with Energy Metrics")
+    logger.info("🚀 Starting PulseQuery AI - Milestone 5.2: Enhanced Before/After Comparison Metrics")
     logger.info("🔧 Features: English Medical Prompt Optimizer, Query Classification, Medical Specialization")
     logger.info("🧠 Enhanced: Template-based Medical Prompt Engineering with Energy Savings")
     logger.info("📄 NEW: Interactive Prompt Optimization Workflow with Markdown Rendering + Energy Analytics")
     logger.info("🌱 GREEN: Energy consumption tracking and environmental impact metrics")
-    logger.info("🎯 UI: Complete English-focused Medical AI System with Sustainability Dashboard")
+    logger.info("🩺 FIXED: Medical terminology density calculation working properly")
+    logger.info("📊 NEW: Before/After Comparison Display with Side-by-Side Metrics")
+    logger.info("🎯 UI: Complete English-focused Medical AI System with Enhanced Comparison Interface")
     
     try:
         logger.info("\n🔄 Creating complete Flask application...")
@@ -2168,8 +2418,8 @@ if __name__ == '__main__':
         logger.info("❤️ Health Check: http://localhost:5000/health")
         logger.info("💾 Persistence Status: http://localhost:5000/api/rag/persistence-status")
         
-        logger.info("\n🧪 Milestone 5 Enhanced Endpoints:")
-        logger.info("   - /api/prompt/optimize - English prompt optimization + energy metrics")
+        logger.info("\n🧪 Milestone 5.2 Enhanced Endpoints:")
+        logger.info("   - /api/prompt/optimize - English prompt optimization + energy metrics + before/after comparison")
         logger.info("   - /api/prompt/generate-final - Generate from optimized prompt")
         logger.info("   - /api/debug/optimizer-status - Debug optimizer status")
         logger.info("   - /api/auth/login - User authentication")
@@ -2177,13 +2427,14 @@ if __name__ == '__main__':
         logger.info("   - /api/rag/stats - RAG system statistics")
         logger.info("   - /api/rag/persistence-status - Check document persistence")
         
-        logger.info("\n🎯 Milestone 5 Enhanced Features:")
+        logger.info("\n🎯 Milestone 5.2 Enhanced Features:")
         logger.info("   - English Medical Prompt Optimizer with Energy Analytics")
         logger.info("   - Query Type Classification (7 types)")
         logger.info("   - Medical Specialty Detection (10+ specialties)")
         logger.info("   - Patient Information Extraction")
         logger.info("   - Template-based Prompt Generation")
-        logger.info("   - Quality Metrics Calculation")
+        logger.info("   - ✅ FIXED: Medical Terminology Density Calculation")
+        logger.info("   - ✅ NEW: Before/After Comparison Metrics Display")
         logger.info("   - 🌱 Energy Consumption Tracking")
         logger.info("   - 💰 Cost Savings Analysis")
         logger.info("   - 🌍 Environmental Impact Metrics (CO₂ savings)")
@@ -2202,13 +2453,13 @@ if __name__ == '__main__':
         logger.info("\n🎨 Enhanced UI Features:")
         logger.info("   - Markdown rendering with marked.js library")
         logger.info("   - Professional medical report styling")
-        logger.info("   - 📊 Energy metrics dashboard with Chart.js")
+        logger.info("   - 📊 Before/After comparison metrics with Chart.js")
         logger.info("   - Real-time CO₂ and cost savings display")
         logger.info("   - Interactive energy impact charts")
         logger.info("   - Headers, lists, tables, and formatting support")
         logger.info("   - Copy original markdown functionality")
         logger.info("   - Elevated logo frame with hover effects")
-        logger.info("   - 📊 Prompt metrics matching energy metrics styling")
+        logger.info("   - ✅ Comparison indicator for enhanced user experience")
         
         logger.info("\n🔋 Energy Analytics Features:")
         logger.info("   - Token usage before/after optimization")
@@ -2217,14 +2468,22 @@ if __name__ == '__main__':
         logger.info("   - Cost savings in USD")
         logger.info("   - Efficiency improvement percentages")
         logger.info("   - Visual charts for impact analysis")
-        logger.info("   - Consistent card-based metrics display")
         
-        logger.info("\n🎯 UI Enhancement Details:")
-        logger.info("   - Prompt metrics now match energy metrics styling")
-        logger.info("   - Consistent gradient backgrounds and card layouts")
-        logger.info("   - Professional medical dashboard appearance")
-        logger.info("   - Interactive charts for both prompt quality and energy impact")
-        logger.info("   - Unified color scheme across all metrics sections")
+        logger.info("\n📊 Before/After Comparison Features:")
+        logger.info("   - ✅ Side-by-side character count comparison")
+        logger.info("   - ✅ Token count before vs after optimization")
+        logger.info("   - ✅ Medical terminology density improvement tracking")
+        logger.info("   - ✅ Change indicators showing exact differences")
+        logger.info("   - ✅ Color-coded metrics (orange=before, green=after)")
+        logger.info("   - ✅ Visual improvement validation")
+        logger.info("   - ✅ Comprehensive optimization proof display")
+        
+        logger.info("\n🎯 Final UI Layout Order:")
+        logger.info("   - ✅ 1. Energy Metrics (🌱 Optimization Energy Impact)")
+        logger.info("   - ✅ 2. Before/After Comparison (📊 side-by-side metrics)")
+        logger.info("   - ✅ 3. Interactive Chart (below both metric sections)")
+        logger.info("   - ✅ Comparison indicator when before/after data available")
+        logger.info("   - ✅ Professional gradient backgrounds and consistent design")
         
         logger.info("\n🔄 Starting server...")
         
@@ -2242,5 +2501,5 @@ if __name__ == '__main__':
         logger.info(f"\n❌ Server startup failed: {e}")
         traceback.print_exc()
     finally:
-        logger.info("\n✅ Milestone 5 Enhanced shutdown complete")
+        logger.info("\n✅ Milestone 5.2 Enhanced shutdown complete - Before/After Comparison Fully Implemented!")
 
