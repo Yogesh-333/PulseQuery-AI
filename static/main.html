@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseQuery AI - Modern Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --blue-primary: #2563eb;
+            --blue-light: #dbeafe;
+            --blue-gradient: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-600: #4b5563;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--blue-gradient);
+            min-height: 100vh;
+            padding-top: 80px;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* ✅ MODERN NAVBAR */
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .navbar-brand {
+            color: var(--gray-900) !important;
+            font-weight: 700;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-text {
+            color: var(--gray-600) !important;
+            font-weight: 500;
+        }
+
+        .navbar-logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 12px;
+            border-radius: 10px;
+            background: var(--blue-light);
+            padding: 6px;
+        }
+
+        /* ✅ MODERN CARDS */
+        .feature-section {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            padding: 32px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .feature-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        }
+
+        .section-header {
+            color: var(--gray-900);
+            margin-bottom: 24px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: -0.025em;
+            border-bottom: 3px solid var(--blue-primary);
+            padding-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ✅ MODERN CHAT CONTAINER */
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--gray-200) transparent;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: var(--gray-200);
+            border-radius: 3px;
+        }
+
+        .chat-message {
+            margin-bottom: 16px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-bubble {
+            display: inline-block;
+            padding: 12px 16px;
+            border-radius: 16px;
+            max-width: 70%;
+            word-wrap: break-word;
+            font-size: 0.95rem;
+        }
+
+        .chat-message.user {
+            text-align: right;
+        }
+
+        .chat-message.user .chat-bubble {
+            background: var(--blue-primary);
+            color: white;
+        }
+
+        .chat-message.ai {
+            text-align: left;
+        }
+
+        .chat-message.ai .chat-bubble {
+            background: var(--white);
+            color: var(--gray-900);
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* ✅ MODERN METRICS - WHITE CARDS */
+        .energy-metric {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+        }
+
+        .energy-metric:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--blue-primary);
+        }
+
+        .energy-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .energy-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ✅ MODERN PLACEHOLDER CONTENT */
+        .placeholder-content {
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+            border: 2px dashed var(--gray-200);
+            border-radius: 20px;
+            padding: 48px 32px;
+            text-align: center;
+            color: var(--gray-600);
+        }
+
+        .placeholder-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+
+        .placeholder-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--gray-900);
+        }
+
+        .placeholder-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        /* ✅ MODERN COMPARISON CARDS */
+        .comparison-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .comparison-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .comparison-header {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+            font-size: 1rem;
+        }
+
+        .comparison-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .before-after {
+            padding: 12px 16px;
+            border-radius: 8px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .before-metric {
+            background-color: var(--gray-100);
+            border-left: 4px solid #f59e0b;
+        }
+
+        .after-metric {
+            background-color: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+
+        /* ✅ MODERN BUTTONS */
+        .btn-custom {
+            min-width: 140px;
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 12px 24px;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--blue-primary) !important;
+            color: white !important;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8 !important;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-success {
+            background: #22c55e !important;
+            color: white !important;
+        }
+
+        .btn-success:hover {
+            background: #16a34a !important;
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background: #f59e0b !important;
+            color: white !important;
+        }
+
+        .btn-warning:hover {
+            background: #d97706 !important;
+            transform: translateY(-1px);
+        }
+
+        .btn-info {
+            background: #06b6d4 !important;
+            color: white !important;
+        }
+
+        .btn-info:hover {
+            background: #0891b2 !important;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--gray-600) !important;
+            color: white !important;
+        }
+
+        .btn-secondary:hover {
+            background: #374151 !important;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-light {
+            border: 2px solid white !important;
+            color: white !important;
+            background: transparent !important;
+            font-weight: 600;
+        }
+
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            transform: translateY(-1px);
+        }
+
+        /* ✅ MODERN FORM CONTROLS */
+        .form-control,
+        .form-select {
+            border-radius: 12px;
+            border: 2px solid var(--gray-200);
+            padding: 12px 16px;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--blue-primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        /* ✅ MODERN BADGES */
+        .badge {
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        .bg-primary {
+            background: var(--blue-primary) !important;
+        }
+
+        /* ✅ MODERN LOADING SPINNER */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--gray-200);
+            border-top: 3px solid var(--blue-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ✅ RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .feature-section {
+                padding: 24px 20px;
+                margin-bottom: 24px;
+            }
+
+            .section-header {
+                font-size: 1.25rem;
+            }
+
+            .energy-value {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* ✅ MODERN SCROLLBAR */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--gray-200) transparent;
+        }
+
+        *::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: var(--gray-200);
+            border-radius: 4px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background-color: var(--gray-600);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Modern Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="/static/logo.png" alt="PulseQuery Logo" class="navbar-logo"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                <span style="display:none; margin-right: 12px; font-size: 24px;">🏥</span>
+                PulseQuery AI
+            </a>
+            <div class="d-flex align-items-center">
+                <span id="userInfo" class="navbar-text me-3">👤 Loading...</span>
+                <button id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Column: Chat Interface -->
+            <div class="col-lg-6">
+                <div class="feature-section">
+                    <h4 class="section-header">
+                        <span>💬</span>
+                        AI Medical Chat & Query Optimization
+                    </h4>
+
+                    <!-- Chat Messages Area -->
+                    <div id="chatContainer" class="chat-container"></div>
+
+                    <!-- Query Input -->
+                    <div class="mb-4">
+                        <label for="userQuery" class="form-label">Enter Medical Query</label>
+                        <textarea id="userQuery" class="form-control" rows="4" placeholder="Enter your medical question or case here...
+
+Examples:
+• Patient Maria Rodriguez, 67 years old, chest pain and shortness of breath
+• 45-year-old male with diabetes presenting with foot ulcer"></textarea>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="useContext" checked>
+                        <label class="form-check-label" for="useContext">
+                            Use document context for optimization (recommended)
+                        </label>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-3 mb-4 flex-wrap">
+                        <button id="optimizeBtn" class="btn btn-primary btn-custom">🔍 Optimize Prompt</button>
+                        <button id="generateBtn" class="btn btn-success btn-custom" style="display:none;">🤖 Generate AI
+                            Response</button>
+                        <button id="resetBtn" class="btn btn-secondary btn-custom" onclick="resetChat()">🔄
+                            Reset</button>
+                    </div>
+
+                    <!-- Optimized Prompt Display -->
+                    <div id="optimizedPromptSection" style="display:none;">
+                        <label for="optimizedPrompt" class="form-label">Optimized Prompt (Editable)</label>
+                        <textarea id="optimizedPrompt" class="form-control mb-3" rows="6"></textarea>
+                    </div>
+
+                    <!-- Status Messages -->
+                    <div id="statusMessages"></div>
+                </div>
+            </div>
+
+            <!-- Right Column: Analytics & Document Upload -->
+            <div class="col-lg-6">
+                <!-- Energy Analytics Section -->
+                <div class="feature-section">
+                    <h4 class="section-header">
+                        <span>📊</span>
+                        Optimization & Energy Analytics
+                    </h4>
+
+                    <!-- Initial Placeholder Content for Energy Metrics -->
+                    <div id="energyMetrics" class="row">
+                        <div class="col-12">
+                            <div class="placeholder-content">
+                                <div class="placeholder-icon">⚡</div>
+                                <div class="placeholder-title">Energy Analytics Ready</div>
+                                <div class="placeholder-subtitle">Submit a medical query to see optimization metrics,
+                                    energy savings, and environmental impact data</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Energy Chart (initially hidden) -->
+                    <canvas id="energyChart" width="400" height="200" style="display:none; margin-top: 24px;"></canvas>
+
+                    <!-- Initial Placeholder Content for Comparison Metrics -->
+                    <div id="comparisonMetrics" class="mt-4">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">📊</div>
+                            <div class="placeholder-title">Before vs After Comparison</div>
+                            <div class="placeholder-subtitle">Optimization comparison data will appear here showing
+                                improvements in tokens, efficiency, and medical terminology usage</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Upload Section -->
+                <div class="feature-section">
+                    <h4 class="section-header">
+                        <span>📄</span>
+                        Document Upload & Management
+                    </h4>
+
+                    <form id="uploadForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="documentFile" class="form-label">Select Document</label>
+                                <input type="file" id="documentFile" class="form-control" accept=".pdf,.docx,.txt"
+                                    required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="docType" class="form-label">Document Type</label>
+                                <select id="docType" class="form-select">
+                                    <option value="medical">📋 Medical Record</option>
+                                    <option value="protocol">🔬 Clinical Protocol</option>
+                                    <option value="guideline">📚 Medical Guideline</option>
+                                    <option value="research">🧪 Research Paper</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="docLanguage" class="form-label">Language</label>
+                                <select id="docLanguage" class="form-select">
+                                    <option value="en">🇺🇸 English</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success mt-4 btn-custom">📤 Upload Document</button>
+                    </form>
+
+                    <div id="uploadResult" class="mt-3"></div>
+                </div>
+
+                <!-- Quick System Health Section
+                <div class="feature-section">
+                    <h4 class="section-header">
+                        <span>❤️</span>
+                        System Health
+                    </h4>
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        <button class="btn btn-info btn-sm" onclick="checkSystemHealth()">Check Health</button>
+                        <button class="btn btn-warning btn-sm" onclick="checkRAGStatus()">RAG Status</button>
+                    </div>
+                    <div id="healthStatus"></div>
+                </div> -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let sessionId = null;
+        let userName = null;
+        let energyChartInstance = null;
+
+        // Session validation function
+        function validateSession() {
+            const sessionId = sessionStorage.getItem('sessionId');
+            const userName = sessionStorage.getItem('userName');
+
+            if (!sessionId || !userName) {
+                window.location.href = '/login';
+                return false;
+            }
+
+            return true;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!validateSession()) {
+                return;
+            }
+
+            sessionId = sessionStorage.getItem('sessionId');
+            userName = sessionStorage.getItem('userName');
+
+            document.getElementById('userInfo').textContent = `👤 ${userName}`;
+
+            document.getElementById('logoutBtn').addEventListener('click', function (e) {
+                e.preventDefault();
+                logout();
+            });
+            document.getElementById('optimizeBtn').addEventListener('click', optimizePrompt);
+            document.getElementById('generateBtn').addEventListener('click', generateResponse);
+            document.getElementById('uploadForm').addEventListener('submit', uploadDocument);
+
+            document.getElementById('userQuery').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    optimizePrompt();
+                }
+            });
+        });
+
+        // Logout functionality
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                const sessionId = sessionStorage.getItem('sessionId');
+
+                document.getElementById('logoutBtn').innerHTML = '🔄 Logging out...';
+                document.getElementById('logoutBtn').disabled = true;
+
+                fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            sessionStorage.clear();
+                            localStorage.clear();
+                            alert('✅ Logged out successfully');
+                            window.location.href = '/login';
+                        } else {
+                            sessionStorage.clear();
+                            localStorage.clear();
+                            alert('⚠️ Session ended locally. Redirecting to login...');
+                            window.location.href = '/login';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Logout error:', error);
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        alert('⚠️ Network error. Session cleared locally.');
+                        window.location.href = '/login';
+                    })
+                    .finally(() => {
+                        document.getElementById('logoutBtn').innerHTML = 'Logout';
+                        document.getElementById('logoutBtn').disabled = false;
+                    });
+            }
+        }
+
+        // Add message to chat
+        function addChatMessage(message, sender) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+
+            if (sender === 'ai') {
+                bubble.innerHTML = marked.parse(message);
+            } else {
+                bubble.textContent = message;
+            }
+
+            messageDiv.appendChild(bubble);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Optimize prompt
+        async function optimizePrompt() {
+            const query = document.getElementById('userQuery').value.trim();
+            const useContext = document.getElementById('useContext').checked;
+
+            if (!query) {
+                showStatus('Please enter a medical query first.', 'warning');
+                return;
+            }
+
+            showStatus('🔄 Optimizing prompt and analyzing query...', 'info');
+            addChatMessage(query, 'user');
+
+            try {
+                const response = await fetch('/api/prompt/optimize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({ query, use_context: useContext })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('optimizedPrompt').value = data.optimized_prompt;
+                    document.getElementById('optimizedPromptSection').style.display = 'block';
+                    document.getElementById('generateBtn').style.display = 'inline-block';
+
+                    if (data.energy_metrics) {
+                        updateEnergyMetrics(data.energy_metrics);
+                    }
+
+                    if (data.original_metrics && data.metrics) {
+                        updateComparisonMetrics(data.original_metrics, data.metrics);
+                    }
+
+                    showStatus('✅ Prompt optimized successfully!', 'success');
+                    addChatMessage('Prompt has been optimized. You can review and edit it below, then generate the AI response.', 'ai');
+                } else {
+                    showStatus('❌ Optimization failed: ' + (data.error || 'Unknown error'), 'danger');
+                }
+            } catch (error) {
+                showStatus('❌ Network error: ' + error.message, 'danger');
+            }
+        }
+
+        // Generate AI response
+        async function generateResponse() {
+            const finalPrompt = document.getElementById('optimizedPrompt').value.trim();
+
+            if (!finalPrompt) {
+                showStatus('Please optimize a prompt first.', 'warning');
+                return;
+            }
+
+            showStatus('🤖 Generating AI response...', 'info');
+
+            try {
+                const response = await fetch('/api/prompt/generate-final', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({
+                        final_prompt: finalPrompt,
+                        max_tokens: 600,
+                        temperature: 0.3
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addChatMessage(data.ai_response, 'ai');
+                    showStatus('✅ AI response generated successfully!', 'success');
+                } else {
+                    showStatus('❌ Generation failed: ' + (data.error || 'Unknown error'), 'danger');
+                }
+            } catch (error) {
+                showStatus('❌ Network error: ' + error.message, 'danger');
+            }
+        }
+
+        // Update energy metrics - WHITE CARDS ONLY
+        function updateEnergyMetrics(energyData) {
+            const container = document.getElementById('energyMetrics');
+
+            container.innerHTML = `
+                <div class="col-md-5 col-lg-2">
+                    <div class="energy-metric">
+                        <div class="energy-value">${energyData.tokens_reduced}</div>
+                        <div class="energy-label">Tokens Saved</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="energy-metric">
+                        <div class="energy-value">${energyData.energy_saved_wh.toFixed(6)} Wh</div>
+                        <div class="energy-label">Energy Saved</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="energy-metric">
+                        <div class="energy-value">${energyData.efficiency_improvement_percent}%</div>
+                        <div class="energy-label">Efficiency Gain</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="energy-metric">
+                        <div class="energy-value">$${energyData.cost_saved_usd.toFixed(6)}</div>
+                        <div class="energy-label">Cost Savings</div>
+                    </div>
+                </div>
+            `;
+
+            // Update chart with NEUTRAL COLORS (no blue)
+            const ctx = document.getElementById('energyChart').getContext('2d');
+
+            if (energyChartInstance) {
+                energyChartInstance.destroy();
+            }
+
+            energyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Original Tokens', 'Optimized Tokens', 'Tokens Saved'],
+                    datasets: [{
+                        data: [energyData.original_tokens, energyData.optimized_tokens, energyData.tokens_reduced],
+                        backgroundColor: ['#6b7280', '#374151', '#22c55e'], // Gray and green, NO blue
+                        borderColor: ['#4b5563', '#1f2937', '#16a34a'],
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#111827',
+                            bodyColor: '#374151',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f3f4f6'
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('energyChart').style.display = 'block';
+        }
+
+        // Update comparison metrics - WHITE CARDS ONLY
+        function updateComparisonMetrics(originalMetrics, optimizedMetrics) {
+            const container = document.getElementById('comparisonMetrics');
+
+            const originalLength = originalMetrics.length || 0;
+            const optimizedLength = optimizedMetrics.length || 0;
+            const originalTokens = originalMetrics.token_estimate || 0;
+            const optimizedTokens = optimizedMetrics.token_estimate || 0;
+            const originalMedical = Math.round((originalMetrics.medical_terminology_density || 0) * 100);
+            const optimizedMedical = Math.round((optimizedMetrics.medical_terminology_density || 0) * 100);
+
+            container.innerHTML = `
+                <h5 style="color: var(--gray-900); font-weight: 700; margin-bottom: 20px;">📊 Before vs After Comparison</h5>
+                
+                <div class="comparison-card">
+                    <div class="comparison-header">Characters</div>
+                    <div class="comparison-row">
+                        <div class="before-after before-metric">Before: <strong>${originalLength}</strong></div>
+                        <div class="before-after after-metric">After: <strong>${optimizedLength}</strong></div>
+                        <div class="badge bg-secondary">Change: ${optimizedLength - originalLength >= 0 ? '+' : ''}${optimizedLength - originalLength}</div>
+                    </div>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="comparison-header">Est. Tokens</div>
+                    <div class="comparison-row">
+                        <div class="before-after before-metric">Before: <strong>~${originalTokens}</strong></div>
+                        <div class="before-after after-metric">After: <strong>~${optimizedTokens}</strong></div>
+                        <div class="badge bg-secondary">Change: ${optimizedTokens - originalTokens >= 0 ? '+' : ''}${optimizedTokens - originalTokens}</div>
+                    </div>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="comparison-header">Medical Terms</div>
+                    <div class="comparison-row">
+                        <div class="before-after before-metric">Before: <strong>${originalMedical}%</strong></div>
+                        <div class="before-after after-metric">After: <strong>${optimizedMedical}%</strong></div>
+                        <!-- Medical Terms Delta Hidden as requested -->
+                    </div>
+                </div>
+            `;
+        }
+
+        // Document upload
+        async function uploadDocument(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('documentFile');
+            const docType = document.getElementById('docType').value;
+            const docLanguage = document.getElementById('docLanguage').value;
+
+            if (!fileInput.files.length) {
+                showUploadStatus('Please select a file to upload.', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('doc_type', docType);
+            formData.append('language', docLanguage);
+
+            showUploadStatus('📤 Uploading and processing document...', 'info');
+
+            try {
+                const response = await fetch('/api/rag/upload', {
+                    method: 'POST',
+                    headers: { 'X-Session-ID': sessionId },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showUploadStatus(`✅ Document uploaded successfully!<br>File: ${data.original_filename}<br>Chunks: ${data.chunks_created || 0}`, 'success');
+                    fileInput.value = '';
+                } else {
+                    showUploadStatus('❌ Upload failed: ' + (data.error || 'Unknown error'), 'danger');
+                }
+            } catch (error) {
+                showUploadStatus('❌ Network error: ' + error.message, 'danger');
+            }
+        }
+
+        // System health check
+        async function checkSystemHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+
+                let html = '<h6 style="color: var(--gray-900); font-weight: 600; margin-bottom: 16px;">System Health Status:</h6><div class="row">';
+                Object.entries(data.components || {}).forEach(([key, value]) => {
+                    const status = value.includes('✅') ? 'success' : value.includes('🔄') ? 'warning' : 'danger';
+                    html += `<div class="col-md-6 mb-2"><span class="badge bg-${status} me-2">${key.replace('_', ' ')}</span>${value}</div>`;
+                });
+                html += '</div>';
+
+                document.getElementById('healthStatus').innerHTML = html;
+            } catch (error) {
+                document.getElementById('healthStatus').innerHTML = '<div class="alert alert-danger">Health check failed</div>';
+            }
+        }
+
+        // RAG status check
+        async function checkRAGStatus() {
+            try {
+                const response = await fetch('/api/rag/stats', {
+                    headers: { 'X-Session-ID': sessionId }
+                });
+                const data = await response.json();
+
+                let html = '<h6 style="color: var(--gray-900); font-weight: 600; margin-bottom: 16px;">RAG System Status:</h6>';
+                if (data.rag_stats) {
+                    Object.entries(data.rag_stats).forEach(([key, value]) => {
+                        html += `<p><strong>${key.replace('_', ' ')}:</strong> ${value}</p>`;
+                    });
+                }
+
+                document.getElementById('healthStatus').innerHTML = html;
+            } catch (error) {
+                document.getElementById('healthStatus').innerHTML = '<div class="alert alert-danger">RAG status check failed</div>';
+            }
+        }
+
+        // Utility functions
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessages');
+            statusDiv.innerHTML = `<div class="alert alert-${type}" style="border-radius: 12px;">${message}</div>`;
+            setTimeout(() => { statusDiv.innerHTML = ''; }, 5000);
+        }
+
+        function showUploadStatus(message, type) {
+            const uploadDiv = document.getElementById('uploadResult');
+            uploadDiv.innerHTML = `<div class="alert alert-${type}" style="border-radius: 12px;">${message}</div>`;
+        }
+
+        function resetChat() {
+            document.getElementById('userQuery').value = '';
+            document.getElementById('optimizedPrompt').value = '';
+            document.getElementById('optimizedPromptSection').style.display = 'none';
+            document.getElementById('generateBtn').style.display = 'none';
+            document.getElementById('chatContainer').innerHTML = '';
+            document.getElementById('statusMessages').innerHTML = '';
+
+            // Reset to initial placeholder content
+            document.getElementById('energyMetrics').innerHTML = `
+                <div class="col-12">
+                    <div class="placeholder-content">
+                        <div class="placeholder-icon">⚡</div>
+                        <div class="placeholder-title">Energy Analytics Ready</div>
+                        <div class="placeholder-subtitle">Submit a medical query to see optimization metrics, energy savings, and environmental impact data</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('comparisonMetrics').innerHTML = `
+                <div class="placeholder-content">
+                    <div class="placeholder-icon">📊</div>
+                    <div class="placeholder-title">Before vs After Comparison</div>
+                    <div class="placeholder-subtitle">Optimization comparison data will appear here showing improvements in tokens, efficiency, and medical terminology usage</div>
+                </div>
+            `;
+
+            document.getElementById('energyChart').style.display = 'none';
+
+            if (energyChartInstance) {
+                energyChartInstance.destroy();
+                energyChartInstance = null;
+            }
+        }
+    </script>
+</body>
+
+</html>

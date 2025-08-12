@@ -1022,23 +1022,25 @@ Generate a thorough medical analysis addressing the patient's symptoms and diagn
 
     
 
+    # Login page route
+    @app.route('/')
+    @app.route('/login')
+    def login_page():
+        """Serve the login page"""
+        return send_from_directory('static', 'login.html')
+
+    # Main screen route  
+    @app.route('/main')
+    def main_screen():
+        """Serve the main screen"""
+        return send_from_directory('static', 'main.html')
+
+    # Keep your existing test-ui route
     @app.route('/test-ui')
     def test_ui():
-        """Serve the UI from static file"""
-        try:
-            return send_from_directory('static', 'ui.html')
-        except FileNotFoundError:
-            return """
-            <html>
-            <head><title>PulseQuery AI - UI Not Found</title></head>
-            <body>
-                <h1>UI File Not Found</h1>
-                <p>Please ensure ui.html is in the static/ directory</p>
-                <a href="/">← Back to Home</a>
-            </body>
-            </html>
-            """, 404
-
+        """Serve the comprehensive UI"""
+        return send_from_directory('static', 'ui.html')
+    
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):

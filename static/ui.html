@@ -6,13 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PulseQuery AI - Before/After Comparison (Medical Terms Delta Hidden)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --primary-blue: #007bff;
+            --primary-dark: #0056b3;
+            --secondary-gray: #6c757d;
+            --light-gray: #f8f9fa;
+            --white: #ffffff;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --card-border: #e9ecef;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --subtle-success-bg: #e2f4e6;
+            --subtle-warning-bg: #fffbe0;
+            --subtle-danger-bg: #fbe6e8;
+            --subtle-info-bg: #e6f7fa;
+            --soft-green: #4caf50;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 20px;
-            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px 0;
+            background-color: var(--light-gray);
+            color: #343a40;
         }
 
         .container {
@@ -21,357 +43,38 @@
         }
 
         .card {
-            border: 1px solid #dee2e6;
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            background: white;
+            border: none;
+            padding: 0;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            background: var(--white);
+            overflow: hidden;
         }
 
         .card-header {
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            padding: 15px;
-            margin: -20px -20px 20px -20px;
-            border-radius: 8px 8px 0 0;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            cursor: pointer;
-            margin: 5px;
-            border-radius: 5px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #856404;
-        }
-
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .btn-info {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .btn-info:hover {
-            background: #138496;
-        }
-
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #0056b3;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #545b62;
-        }
-
-        .alert {
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 5px;
-            border: 1px solid transparent;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            border-color: #bee5eb;
-            color: #0c5460;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            border-color: #ffeaa7;
-            color: #856404;
-        }
-
-        .alert-danger {
-            background: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
-        }
-
-        .form-control,
-        .form-select {
-            border-radius: 5px;
-            border: 1px solid #ced4da;
-            padding: 8px 12px;
-        }
-
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .status-ready {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-loading {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .optimization-info {
-            background: #e7f3ff;
-            border: 1px solid #b8daff;
-            border-radius: 4px;
-            padding: 8px;
-            margin: 8px 0;
-            font-size: 0.9em;
-        }
-
-        /* ✅ Energy Metrics styling */
-        .energy-metrics {
-            background: linear-gradient(135deg, #e8f5e8, #f0f9ff);
-            border: 1px solid #4caf50;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 16px 0;
-        }
-
-        .energy-metric {
-            background: white;
-            border: 1px solid #e1f5fe;
-            border-radius: 6px;
-            padding: 10px;
-            margin: 5px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-
-        .energy-value {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #1976d2;
-        }
-
-        .energy-label {
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 4px;
-        }
-
-        .energy-metrics h6 {
-            color: #2e7d32;
-            margin-bottom: 16px;
-            font-weight: 600;
-        }
-
-        /* ✅ Modified: Before/After Comparison Styling */
-        .prompt-metrics {
-            background: linear-gradient(135deg, #e8f5e8, #f0f9ff);
-            border: 1px solid #4caf50;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 16px 0;
-        }
-
-        .prompt-metrics h6 {
-            color: #2e7d32;
-            margin-bottom: 16px;
-            font-weight: 600;
-        }
-
-        .metric-comparison-card {
-            background: white;
-            border: 1px solid #e1f5fe;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .metric-label {
-            font-weight: 600;
-            color: #2e7d32;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        .comparison-row {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .before-metric,
-        .after-metric {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 8px;
-            border-radius: 4px;
-        }
-
-        .before-metric {
-            background-color: #fff3e0;
-            border-left: 3px solid #ff9800;
-        }
-
-        .after-metric {
-            background-color: #e8f5e8;
-            border-left: 3px solid #4caf50;
-        }
-
-        .before-metric .label {
-            font-size: 0.8rem;
-            color: #e65100;
-            font-weight: 500;
-        }
-
-        .after-metric .label {
-            font-size: 0.8rem;
-            color: #2e7d32;
-            font-weight: 500;
-        }
-
-        .before-metric .value,
-        .after-metric .value {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .change-indicator {
-            text-align: center;
-            font-weight: 600;
-            font-size: 0.85rem;
-            padding: 3px 6px;
-            border-radius: 12px;
-            margin-top: 5px;
-        }
-
-        .change-indicator.increase {
-            background-color: #e8f5e8;
-            color: #2e7d32;
-        }
-
-        .change-indicator.decrease {
-            background-color: #fff3e0;
-            color: #e65100;
-        }
-
-        .comparison-header {
-            border-bottom: 2px solid #4caf50;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        .prompt-metric {
-            background: white;
-            border: 1px solid #e1f5fe;
-            border-radius: 6px;
-            padding: 10px;
-            margin: 5px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-
-        .prompt-metric-value {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #1976d2;
-        }
-
-        .prompt-metric-label {
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 4px;
-        }
-
-        .environmental-impact {
-            background: rgba(76, 175, 80, 0.1);
-            border-left: 4px solid #4caf50;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #007bff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
+            background: linear-gradient(135deg, #004d99, #007bff);
+            color: var(--white);
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
         }
 
         .header-container {
             display: flex;
             align-items: center;
-            gap: 20px;
-            padding: 20px 24px;
-            background: transparent;
+            gap: 24px;
         }
 
         .logo-frame {
-            background: white;
+            background: var(--white);
             border-radius: 16px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             padding: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             min-width: 80px;
             min-height: 80px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .logo-frame:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
 
         .logo-image {
@@ -381,25 +84,353 @@
             border-radius: 8px;
         }
 
-        .header-content {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
         .main-title {
             margin: 0;
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             font-weight: 700;
-            color: white;
-            line-height: 1.1;
+            color: var(--white);
         }
 
         .subtitle {
             margin: 4px 0 0 0;
-            font-size: 0.95rem;
-            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.85);
             font-weight: 400;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: var(--white);
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #856404;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-info {
+            background-color: var(--info-color);
+            color: var(--white);
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-gray);
+            color: var(--white);
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 1px solid transparent;
+        }
+
+        .alert-success {
+            background: var(--subtle-success-bg);
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-info {
+            background: var(--subtle-info-bg);
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
+        .alert-warning {
+            background: var(--subtle-warning-bg);
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+
+        .alert-danger {
+            background: var(--subtle-danger-bg);
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 10px 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .status-ready {
+            background: var(--success-color);
+            color: var(--white);
+        }
+
+        .status-loading {
+            background: var(--warning-color);
+            color: #856404;
+        }
+
+        .status-error {
+            background: var(--danger-color);
+            color: var(--white);
+        }
+
+        .optimization-info {
+            background: var(--subtle-info-bg);
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 16px 0;
+            font-size: 0.95em;
+        }
+
+        .energy-metrics {
+            background: var(--subtle-success-bg);
+            border: 1px solid #c3e6cb;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+
+        .energy-metrics h6 {
+            color: var(--success-color);
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .energy-metric {
+            background: var(--white);
+            border: 1px solid #e1f5fe;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .energy-metric:hover {
+            transform: translateY(-3px);
+        }
+
+        .energy-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .energy-label {
+            font-size: 0.9rem;
+            color: var(--secondary-gray);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .environmental-impact {
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid var(--soft-green);
+            padding: 12px;
+            margin-top: 16px;
+            border-radius: 4px;
+            color: #2e7d32;
+        }
+
+        .prompt-metrics {
+            background: var(--subtle-success-bg);
+            border: 1px solid #c3e6cb;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+
+        .prompt-metrics h6 {
+            color: var(--success-color);
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric-comparison-card {
+            background: var(--white);
+            border: 1px solid #e1f5fe;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .metric-label {
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .comparison-row {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .before-metric,
+        .after-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .before-metric {
+            background-color: var(--subtle-warning-bg);
+            border-left: 4px solid var(--warning-color);
+            color: #6a4f00;
+        }
+
+        .after-metric {
+            background-color: var(--subtle-success-bg);
+            border-left: 4px solid var(--success-color);
+            color: #155724;
+        }
+
+        .before-metric .label,
+        .after-metric .label {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .before-metric .value,
+        .after-metric .value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .change-indicator {
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin-top: 10px;
+        }
+
+        .change-indicator.increase {
+            background-color: var(--subtle-success-bg);
+            color: #2e7d32;
+        }
+
+        .change-indicator.decrease {
+            background-color: var(--subtle-danger-bg);
+            color: #c63143;
+        }
+
+        .comparison-header {
+            border-bottom: 2px solid var(--primary-blue);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .prompt-metric {
+            background: var(--white);
+            border: 1px solid #e1f5fe;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .prompt-metric:hover {
+            transform: translateY(-3px);
+        }
+
+        .prompt-metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .prompt-metric-label {
+            font-size: 0.9rem;
+            color: var(--secondary-gray);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
         }
 
         @keyframes spin {
@@ -412,11 +443,11 @@
             }
         }
 
-        /* ✅ MARKDOWN RENDERING STYLES */
+        /* MARKDOWN RENDERING STYLES */
         #aiResponse {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            line-height: 1.6;
-            color: #333;
+            line-height: 1.7;
+            color: #343a40;
         }
 
         #aiResponse h1,
@@ -425,32 +456,24 @@
         #aiResponse h4,
         #aiResponse h5,
         #aiResponse h6 {
-            color: #2c3e50;
+            color: #004d99;
             margin-top: 1.5em;
             margin-bottom: 0.5em;
-            font-weight: 600;
+            font-weight: 700;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 0.3em;
         }
 
         #aiResponse h1 {
             font-size: 1.8em;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 0.3em;
         }
 
         #aiResponse h2 {
             font-size: 1.5em;
-            border-bottom: 1px solid #bdc3c7;
-            padding-bottom: 0.3em;
         }
 
         #aiResponse h3 {
             font-size: 1.3em;
-            color: #34495e;
-        }
-
-        #aiResponse h4 {
-            font-size: 1.1em;
-            color: #34495e;
         }
 
         #aiResponse ul,
@@ -460,7 +483,7 @@
         }
 
         #aiResponse li {
-            margin: 0.5em 0;
+            margin: 0.7em 0;
         }
 
         #aiResponse p {
@@ -469,36 +492,36 @@
         }
 
         #aiResponse strong {
-            color: #2c3e50;
-            font-weight: 600;
+            color: #004d99;
+            font-weight: 700;
         }
 
         #aiResponse em {
-            color: #7f8c8d;
+            color: #6c757d;
             font-style: italic;
         }
 
         #aiResponse blockquote {
-            border-left: 4px solid #3498db;
+            border-left: 4px solid var(--primary-blue);
             margin: 1.5em 0;
-            padding: 0.5em 0 0.5em 1em;
-            background-color: #ecf0f1;
+            padding: 0.5em 0 0.5em 1.5em;
+            background-color: var(--subtle-info-bg);
             font-style: italic;
         }
 
         #aiResponse code {
-            background-color: #f8f9fa;
+            background-color: #e9ecef;
             padding: 0.2em 0.4em;
-            border-radius: 3px;
+            border-radius: 4px;
             font-family: 'Courier New', monospace;
-            color: #e74c3c;
+            color: #c82333;
         }
 
         #aiResponse pre {
-            background-color: #2c3e50;
-            color: #ecf0f1;
-            padding: 1em;
-            border-radius: 5px;
+            background-color: #343a40;
+            color: #f8f9fa;
+            padding: 1.5em;
+            border-radius: 8px;
             overflow-x: auto;
             margin: 1.5em 0;
         }
@@ -517,33 +540,35 @@
 
         #aiResponse th,
         #aiResponse td {
-            border: 1px solid #bdc3c7;
-            padding: 0.75em;
+            border: 1px solid #ced4da;
+            padding: 1em;
             text-align: left;
         }
 
         #aiResponse th {
-            background-color: #ecf0f1;
+            background-color: #e9ecef;
             font-weight: 600;
-            color: #2c3e50;
+            color: #343a40;
         }
 
-        /* ✅ COMPARISON INDICATOR */
         .comparison-indicator {
-            background: rgba(40, 167, 69, 0.1);
-            border: 1px solid #28a745;
-            border-radius: 4px;
-            padding: 8px 12px;
-            margin: 8px 0;
-            font-size: 0.85em;
+            background: var(--subtle-success-bg);
+            border: 1px solid var(--success-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 16px 0;
+            font-size: 0.95em;
             color: #155724;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="card">
             <div class="card-header">
                 <div class="header-container">
@@ -552,224 +577,189 @@
                     </div>
                     <div class="header-content">
                         <h1 class="main-title">PulseQuery AI</h1>
-                        <p class="subtitle">Advanced Medical Intelligence Platform - Medical Terms Delta Hidden</p>
+                        <p class="subtitle">Advanced Medical Intelligence Platform</p>
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Version:</strong> 5.3 - Clinical Intelligence Platform</p>
-                    <p><strong>Status:</strong> <span id="systemStatus" class="status-badge">Checking...</span></p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Core Capabilities:</strong> Smart Query Analysis • Medical AI • Patient Data Extraction •
-                        Energy Optimization • Before/After Comparison</p>
-                    <p><strong>Latest:</strong> Before/After Comparison (Medical Terms Delta Removed Per User Request)
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- System Health Dashboard
-        <div class="card">
-            <div class="card-header">
-                <h5>🔧 System Health Dashboard</h5>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <button class="btn btn-info w-100" onclick="testConnection()">🔗 Connection Test</button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-info w-100" onclick="checkHealth()">❤️ Full Health Check</button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-info w-100" onclick="checkModel()">🤖 Model Status</button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-info w-100" onclick="checkRAG()">🔍 RAG System</button>
-                </div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-6">
-                    <button class="btn btn-warning w-100" onclick="checkOptimizerStatus()">🧠 Debug Optimizer</button>
-                </div>
-                <div class="col-md-6">
-                    <button class="btn btn-secondary w-100" onclick="clearResults()">🗑️ Clear Results</button>
-                </div>
-            </div>
-            <div id="systemResults" class="mt-3"></div>
-        </div> -->
-
-        <!-- Authentication -->
-        <div class="card">
-            <div class="card-header">
-                <h5>🔐 User Authentication</h5>
-            </div>
-            <div class="row align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label">User Account:</label>
-                    <select id="userId" class="form-select">
-                        <option value="">Select User</option>
-                        <option value="doctor1">👨‍⚕️ Dr. Alice Johnson (Full Access)</option>
-                        <option value="admin1">👩‍💼 Admin Eve Wilson (Admin)</option>
-                        <option value="nurse1">👩‍⚕️ Nurse Bob Smith (Read Only)</option>
-                        <option value="resident1">👨‍⚕️ Dr. Charlie Brown (Resident)</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Password:</label>
-                    <input type="password" id="password" class="form-control" placeholder="Password">
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-success" onclick="login()">🔐 Login</button>
-                    <button class="btn btn-warning" onclick="logout()">🚪 Logout</button>
-                </div>
-                <div class="col-md-3">
-                    <div class="alert alert-info mb-0 py-2">
-                        <small id="loginStatus">Not logged in</small>
-                    </div>
-                </div>
-            </div>
-            <small class="text-muted mt-2">Demo Passwords: password123, admin123, nurse123, resident123</small>
-        </div>
-
-        <!-- ✅ AI-Assisted Medical Query Processing with MODIFIED MEDICAL TERMS COMPARISON -->
-        <div class="card" id="promptOptimizationCard" style="display: none;">
-            <div class="card-header">
-                <h5>🧠 AI-Assisted Prompt Optimization (Medical Terms Delta Hidden)</h5>
-                <small>Submit medical query → AI optimizes prompt → View before/after comparison (Medical Terms shows
-                    values only, no difference) → Review & edit → Generate detailed insights</small>
-            </div>
-            <!-- Step 1: User Query Input -->
-            <div class="mb-4">
-                <label class="form-label"><strong>Enter Medical Query</strong></label>
-                <textarea id="userQuery" class="form-control" rows="4"
-                    placeholder="Enter your medical query here...&#10;&#10;Examples:&#10;• Patient Maria Rodriguez, 67 years old, chest pain and shortness of breath&#10;• 45-year-old male with diabetes presenting with foot ulcer&#10;• Patient with hypertension needs cardiology consultation"></textarea>
-                <div class="mt-2">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="useContext" checked>
-                        <label class="form-check-label" for="useContext">
-                            Use document context for optimization (recommended)
-                        </label>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <button class="btn btn-primary btn-lg" onclick="optimizePrompt()">
-                        🔍 Optimize Prompt
-                    </button>
-                </div>
-            </div>
-
-            <!-- Step 2: Optimized Prompt Display & Editing -->
-            <div id="optimizedPromptSection" style="display: none;">
-                <hr>
-                <label class="form-label"><strong>Review & Edit Optimized Prompt</strong></label>
-                <div class="optimization-info" id="optimizationInfo"></div>
-
-                <!-- ✅ COMPARISON INDICATOR -->
-                <div id="comparisonIndicator" class="comparison-indicator" style="display: none;">
-                    <i class="fas fa-chart-bar"></i> <strong>Before/After Comparison Enabled:</strong> See detailed
-                    metrics comparison below. Medical Terms shows before/after values without delta as requested.
-                </div>
-
-                <!-- ✅ ORDER 1: Energy Metrics FIRST -->
-                <div id="energyMetricsSection" class="energy-metrics" style="display: none;">
-                    <h6><i class="fas fa-leaf"></i> 🌱 Optimization Energy Impact</h6>
-                    <div class="row" id="energyMetricsGrid">
-                        <!-- Energy metrics will be populated here -->
-                    </div>
-                    <div class="environmental-impact" id="environmentalImpact">
-                        <!-- Environmental impact summary -->
-                    </div>
-                </div>
-
-                <!-- ✅ ORDER 2: Prompt Comparison Metrics SECOND (Medical Terms Delta Hidden) -->
-                <div id="promptMetrics" class="prompt-metrics" style="display: none;">
-                    <h6><i class="fas fa-chart-line"></i> 📊 Before vs After Prompt Comparison</h6>
-                    <div class="row" id="promptMetricsGrid">
-                        <!-- Comparison metrics will be populated here -->
-                    </div>
-                </div>
-
-                <!-- ✅ ORDER 3: Energy Chart THIRD -->
-                <div id="energyChartSection" style="display: none; margin: 16px 0;">
-                    <canvas id="energyChart" width="400" height="150"></canvas>
-                </div>
-
-                <textarea id="optimizedPrompt" class="form-control" rows="15"
-                    placeholder="Optimized prompt will appear here..."></textarea>
-
-                <div class="mt-3">
-                    <button class="btn btn-success btn-lg" onclick="generateFromPrompt()">
-                        🤖 Generate AI Response
-                    </button>
-                    <button class="btn btn-secondary" onclick="resetOptimization()">
-                        🔄 Start Over
-                    </button>
-                </div>
-            </div>
-
-            <!-- Step 3: AI Response Display -->
-            <div id="aiResponseSection" style="display: none;">
-                <hr>
-                <label class="form-label"><strong>AI Generated Medical Response</strong></label>
-                <div id="aiResponse" class="alert alert-success"></div>
+            <div class="card-body">
                 <div class="row">
-                    <div class="col-md-8">
-                        <div class="text-muted">
-                            <small id="generationInfo"></small>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Version:</strong> 5.3 - Clinical Intelligence Platform</p>
+                        <p><strong>Status:</strong> <span id="systemStatus" class="status-badge">Checking...</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Core Capabilities:</strong> Smart Query Analysis • Medical AI • Patient
+                            Data Extraction</p>
+                        <p><strong>Latest:</strong> Energy Optimization • Before/After Comparison</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-lock"></i> User Authentication</h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-end">
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <label class="form-label fw-bold">User Account:</label>
+                        <select id="userId" class="form-select">
+                            <option value="">Select User</option>
+                            <option value="doctor1">👨‍⚕️ Dr. Alice Johnson (Full Access)</option>
+                            <option value="admin1">👩‍💼 Admin Eve Wilson (Admin)</option>
+                            <option value="nurse1">👩‍⚕️ Nurse Bob Smith (Read Only)</option>
+                            <option value="resident1">👨‍⚕️ Dr. Charlie Brown (Resident)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <label class="form-label fw-bold">Password:</label>
+                        <input type="password" id="password" class="form-control" placeholder="Password">
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0 d-flex gap-2">
+                        <button class="btn btn-success flex-grow-1" onclick="login()">🔐 Login</button>
+                        <button class="btn btn-warning flex-grow-1" onclick="logout()">🚪 Logout</button>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="alert alert-info mb-0">
+                            <small id="loginStatus">Not logged in</small>
                         </div>
                     </div>
-                    <div class="col-md-4 text-end">
-                        <button class="btn btn-info btn-sm" onclick="copyResponse()">📋 Copy Response</button>
-                        <button class="btn btn-primary btn-sm" onclick="resetForNew()">✨ New Query</button>
+                </div>
+                <small class="text-muted mt-2 d-block">Demo Passwords: password123, admin123, nurse123,
+                    resident123</small>
+            </div>
+        </div>
+
+        <div class="card" id="promptOptimizationCard" style="display: none;">
+            <div class="card-header">
+                <h5><i class="fas fa-brain"></i> AI-Assisted Prompt Optimization</h5>
+                <small>Submit medical query → AI optimizes prompt → View before/after comparison → Review & edit →
+                    Generate detailed insights</small>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Enter Medical Query</label>
+                    <textarea id="userQuery" class="form-control" rows="4"
+                        placeholder="Enter your medical query here...&#10;&#10;Examples:&#10;• Patient Maria Rodriguez, 67 years old, chest pain and shortness of breath&#10;• 45-year-old male with diabetes presenting with foot ulcer&#10;• Patient with hypertension needs cardiology consultation"></textarea>
+                    <div class="mt-3 d-flex align-items-center justify-content-between">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="useContext" checked>
+                            <label class="form-check-label" for="useContext">
+                                Use document context for optimization (recommended)
+                            </label>
+                        </div>
+                        <button class="btn btn-primary btn-lg" onclick="optimizePrompt()">
+                            <i class="fas fa-search"></i> Optimize Prompt
+                        </button>
+                    </div>
+                </div>
+
+                <div id="optimizedPromptSection" style="display: none;">
+                    <hr>
+                    <label class="form-label fw-bold">Review & Edit Optimized Prompt</label>
+                    <div class="optimization-info" id="optimizationInfo"></div>
+
+                    <div id="comparisonIndicator" class="comparison-indicator" style="display: none;">
+                        <i class="fas fa-chart-bar"></i> <strong>Before/After Comparison Enabled:</strong> See detailed
+                        metrics comparison below.
+                    </div>
+
+                    <div id="energyMetricsSection" class="energy-metrics" style="display: none;">
+                        <h6><i class="fas fa-leaf"></i> Optimization Energy Impact</h6>
+                        <div class="row" id="energyMetricsGrid">
+                        </div>
+                        <div class="environmental-impact" id="environmentalImpact">
+                        </div>
+                    </div>
+
+                    <div id="promptMetrics" class="prompt-metrics" style="display: none;">
+                        <h6><i class="fas fa-chart-line"></i> Before vs After Prompt Comparison</h6>
+                        <div class="row" id="promptMetricsGrid">
+                        </div>
+                    </div>
+
+                    <div id="energyChartSection" style="display: none; margin: 20px 0;">
+                        <canvas id="energyChart" width="400" height="150"></canvas>
+                    </div>
+
+                    <textarea id="optimizedPrompt" class="form-control" rows="15"
+                        placeholder="Optimized prompt will appear here..."></textarea>
+
+                    <div class="mt-3 d-flex justify-content-between">
+                        <button class="btn btn-success btn-lg" onclick="generateFromPrompt()">
+                            <i class="fas fa-robot"></i> Generate AI Response
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetOptimization()">
+                            <i class="fas fa-redo"></i> Start Over
+                        </button>
+                    </div>
+                </div>
+
+                <div id="aiResponseSection" style="display: none;">
+                    <hr>
+                    <label class="form-label fw-bold">AI Generated Medical Response</label>
+                    <div id="aiResponse" class="alert alert-success"></div>
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <small id="generationInfo" class="text-muted"></small>
+                        </div>
+                        <div class="col-md-4 text-end d-flex gap-2 justify-content-end">
+                            <button class="btn btn-info btn-sm" onclick="copyResponse()"><i class="fas fa-copy"></i>
+                                Copy Response</button>
+                            <button class="btn btn-primary btn-sm" onclick="resetForNew()"><i class="fas fa-magic"></i>
+                                New Query</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Document Upload -->
         <div class="card" id="uploadCard" style="display: none;">
             <div class="card-header">
-                <h5>📄 Medical Document Upload</h5>
+                <h5><i class="fas fa-upload"></i> Medical Document Upload</h5>
                 <small>Upload patient records for AI analysis (Write permission required)</small>
             </div>
-            <form id="uploadForm">
-                <div class="row">
-                    <div class="col-md-4">
-                        <label class="form-label">Select Document:</label>
-                        <input type="file" class="form-control" id="documentFile" accept=".pdf,.docx,.txt" required>
+            <div class="card-body">
+                <form id="uploadForm">
+                    <div class="row align-items-end">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label class="form-label fw-bold">Select Document:</label>
+                            <input type="file" class="form-control" id="documentFile" accept=".pdf,.docx,.txt" required>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <label class="form-label fw-bold">Document Type:</label>
+                            <select class="form-select" id="docType">
+                                <option value="medical">📋 Medical Record</option>
+                                <option value="protocol">🔬 Clinical Protocol</option>
+                                <option value="guideline">📚 Medical Guideline</option>
+                                <option value="research">🧪 Research Paper</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <label class="form-label fw-bold">Language:</label>
+                            <select class="form-select" id="docLanguage">
+                                <option value="en">🇺🇸 English</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-upload"></i> Upload
+                            </button>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Document Type:</label>
-                        <select class="form-select" id="docType">
-                            <option value="medical">📋 Medical Record</option>
-                            <option value="protocol">🔬 Clinical Protocol</option>
-                            <option value="guideline">📚 Medical Guideline</option>
-                            <option value="research">🧪 Research Paper</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Language:</label>
-                        <select class="form-select" id="docLanguage">
-                            <option value="en">🇺🇸 English</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary w-100">📤 Upload</button>
-                    </div>
-                </div>
-            </form>
-            <div id="uploadResult" class="mt-3" style="display: none;"></div>
+                </form>
+                <div id="uploadResult" class="mt-3" style="display: none;"></div>
+            </div>
         </div>
 
-        <!-- Footer -->
-        <div class="card">
-            <div class="text-center">
-                <p class="mb-2"><strong>PulseQuery AI v5.3 - Medical Terms Delta Hidden</strong></p>
-                <p class="mb-0 text-muted">Empowering Healthcare with AI-Driven Insights, Energy Optimization &
-                    Customized Comparison Analytics</p>
+        <div class="text-center mt-5">
+            <div class="card">
+                <div class="card-body">
+                    <p class="mb-2"><strong>PulseQuery AI v5.3</strong></p>
+                    <p class="mb-0 text-muted">Empowering Healthcare with AI-Driven Insights, Energy Optimization &
+                        Customized Comparison Analytics</p>
+                </div>
             </div>
         </div>
     </div>
@@ -782,7 +772,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             console.log('🏥 PulseQuery AI with Before/After Comparison (Medical Terms Delta Hidden) Loading...');
             updateSystemStatus();
-            checkHealth();
+            // We removed the original health check buttons so we don't need this call here.
 
             // Add Enter key support for password field
             document.getElementById('password').addEventListener('keypress', function (e) {
@@ -806,126 +796,6 @@
                     statusElement.textContent = 'Error ❌';
                     statusElement.className = 'status-badge status-error';
                 });
-        }
-
-        function testConnection() {
-            document.getElementById('systemResults').innerHTML = '<div class="alert alert-info">🔄 Testing connection...</div>';
-            fetch('/')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('systemResults').innerHTML =
-                        '<div class="alert alert-success">' +
-                        '<h6>✅ Connection Test Successful</h6>' +
-                        '<p><strong>Message:</strong> ' + data.message + '</p>' +
-                        '<p><strong>Timestamp:</strong> ' + new Date(data.timestamp).toLocaleString() + '</p>' +
-                        '</div>';
-                })
-                .catch(error => {
-                    document.getElementById('systemResults').innerHTML =
-                        '<div class="alert alert-danger"><h6>❌ Connection Failed</h6><p>' + error + '</p></div>';
-                });
-        }
-
-        function checkHealth() {
-            document.getElementById('systemResults').innerHTML = '<div class="alert alert-info">🔄 Performing health check...</div>';
-            fetch('/health')
-                .then(response => response.json())
-                .then(data => {
-                    let html = '<div class="alert alert-success"><h6>❤️ System Health Check</h6>';
-
-                    if (data.components) {
-                        html += '<div class="row mt-3">';
-                        Object.entries(data.components).forEach(([key, value]) => {
-                            const status = value.includes('✅') ? 'success' : value.includes('🔄') ? 'warning' : 'danger';
-                            html += '<div class="col-md-6 mb-2">';
-                            html += '<span class="badge bg-' + status + ' me-2">' + key.replace('_', ' ') + '</span>';
-                            html += '<span>' + value + '</span>';
-                            html += '</div>';
-                        });
-                        html += '</div>';
-                    }
-
-                    if (data.debug_info) {
-                        html += '<details class="mt-3"><summary>🔧 Debug Information</summary>';
-                        html += '<pre>' + JSON.stringify(data.debug_info, null, 2) + '</pre>';
-                        html += '</details>';
-                    }
-
-                    html += '</div>';
-                    document.getElementById('systemResults').innerHTML = html;
-                })
-                .catch(error => {
-                    document.getElementById('systemResults').innerHTML =
-                        '<div class="alert alert-danger"><h6>❌ Health Check Failed</h6><p>' + error + '</p></div>';
-                });
-        }
-
-        function checkModel() {
-            document.getElementById('systemResults').innerHTML = '<div class="alert alert-info">🔄 Checking model status...</div>';
-            fetch('/api/medgemma/status')
-                .then(response => response.json())
-                .then(data => {
-                    let html = '<div class="alert alert-info"><h6>🤖 MedGemma Model Status</h6>';
-                    html += '<p><strong>Status:</strong> ' + data.status + '</p>';
-                    html += '<p><strong>Progress:</strong> ' + (data.progress || 0) + '%</p>';
-                    html += '<p><strong>Device:</strong> ' + (data.device || 'Unknown') + '</p>';
-                    html += '</div>';
-                    document.getElementById('systemResults').innerHTML = html;
-                })
-                .catch(error => {
-                    document.getElementById('systemResults').innerHTML =
-                        '<div class="alert alert-danger"><h6>❌ Model Check Failed</h6><p>' + error + '</p></div>';
-                });
-        }
-
-        function checkRAG() {
-            document.getElementById('systemResults').innerHTML = '<div class="alert alert-info">🔄 Checking RAG system...</div>';
-            fetch('/api/rag/stats')
-                .then(response => response.json())
-                .then(data => {
-                    let html = '<div class="alert alert-success"><h6>🔍 RAG System Status</h6>';
-                    if (data.rag_stats) {
-                        Object.entries(data.rag_stats).forEach(([key, value]) => {
-                            html += '<p><strong>' + key.replace('_', ' ') + ':</strong> ' + value + '</p>';
-                        });
-                    }
-                    if (data.prompt_optimizer) {
-                        html += '<p><strong>Prompt Optimizer:</strong> ' + data.prompt_optimizer + '</p>';
-                    }
-                    html += '</div>';
-                    document.getElementById('systemResults').innerHTML = html;
-                })
-                .catch(error => {
-                    document.getElementById('systemResults').innerHTML =
-                        '<div class="alert alert-danger"><h6>❌ RAG Check Failed</h6><p>' + error + '</p></div>';
-                });
-        }
-
-        function checkOptimizerStatus() {
-            if (!sessionId) {
-                alert('Please login first to check optimizer status');
-                return;
-            }
-
-            document.getElementById('systemResults').innerHTML = '<div class="alert alert-info">🔄 Checking prompt optimizer status...</div>';
-            fetch('/api/debug/optimizer-status', {
-                headers: { 'X-Session-ID': sessionId }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    let html = '<div class="alert alert-warning"><h6>🧠 Prompt Optimizer Debug Status</h6>';
-                    html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-                    html += '</div>';
-                    document.getElementById('systemResults').innerHTML = html;
-                })
-                .catch(error => {
-                    document.getElementById('systemResults').innerHTML =
-                        '<div class="alert alert-danger"><h6>❌ Optimizer Debug Failed</h6><p>' + error + '</p></div>';
-                });
-        }
-
-        function clearResults() {
-            document.getElementById('systemResults').innerHTML = '';
         }
 
         function login() {
@@ -983,7 +853,6 @@
                 });
         }
 
-        // ✅ Enhanced Prompt Optimization with MODIFIED MEDICAL TERMS COMPARISON (No Delta)
         function optimizePrompt() {
             const query = document.getElementById('userQuery').value.trim();
             const useContext = document.getElementById('useContext').checked;
@@ -1059,7 +928,6 @@
                             document.getElementById('comparisonIndicator').style.display = 'block';
                         }
 
-                        // ✅ Display in sequence Energy → Prompt Comparison → Chart
                         if (data.energy_metrics) {
                             displayEnergyMetrics(data.energy_metrics);
                         }
@@ -1092,13 +960,11 @@
                 });
         }
 
-        // ✅ Display Energy Metrics Function
         function displayEnergyMetrics(energyData) {
             const energySection = document.getElementById('energyMetricsSection');
             const energyGrid = document.getElementById('energyMetricsGrid');
             const environmentalImpact = document.getElementById('environmentalImpact');
 
-            // Display energy metric cards
             energyGrid.innerHTML = `
                 <div class="col-md-3">
                     <div class="energy-metric">
@@ -1126,12 +992,11 @@
                 </div>
             `;
 
-            // Environmental impact summary
             environmentalImpact.innerHTML = `
-                <p><strong>🌱 Environmental Impact:</strong> 
+                <p class="mb-1"><strong>🌱 Environmental Impact:</strong>
                    ${energyData.co2_saved_kg.toFixed(8)} kg CO₂ saved per optimization
                 </p>
-                <p><strong>⚡ Energy Efficiency:</strong> 
+                <p class="mb-0"><strong>⚡ Energy Efficiency:</strong>
                    ${energyData.energy_efficiency_percent}% improvement in energy utilization
                 </p>
             `;
@@ -1139,34 +1004,29 @@
             energySection.style.display = 'block';
         }
 
-        // ✅ MODIFIED Display Function - Show Before vs After Comparison (Medical Terms Delta Hidden)
         function displayPromptMetricsComparisonModified(originalQuery, optimizedPrompt, originalMetrics, optimizedMetrics) {
             const promptSection = document.getElementById('promptMetrics');
             const metricsGrid = document.getElementById('promptMetricsGrid');
 
-            // Calculate original query metrics
             const originalLength = originalMetrics.length || originalQuery.length;
             const originalTokens = originalMetrics.token_estimate || Math.round(originalQuery.split().length * 1.3);
             const originalMedicalDensity = Math.round((originalMetrics.medical_terminology_density || 0) * 100);
 
-            // Get optimized metrics
             const optimizedLength = optimizedMetrics.length || 0;
             const optimizedTokens = optimizedMetrics.token_estimate || 0;
             const optimizedMedicalDensity = Math.round((optimizedMetrics.medical_terminology_density || 0) * 100);
 
-            // Calculate improvements (for Characters and Tokens only)
             const lengthChange = optimizedLength - originalLength;
             const tokenChange = optimizedTokens - originalTokens;
 
             metricsGrid.innerHTML = `
                 <div class="col-12 mb-3">
                     <div class="comparison-header">
-                        <h6 class="text-center mb-3">📊 Before vs After Comparison (Medical Terms Delta Hidden)</h6>
+                        <h6 class="text-center mb-3">📊 Before vs After Comparison</h6>
                     </div>
                 </div>
-                
-                <!-- Character Count Comparison -->
-                <div class="col-md-4">
+
+                <div class="col-md-4 mb-3">
                     <div class="metric-comparison-card">
                         <div class="metric-label">Characters</div>
                         <div class="comparison-row">
@@ -1184,9 +1044,8 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Token Count Comparison -->
-                <div class="col-md-4">
+
+                <div class="col-md-4 mb-3">
                     <div class="metric-comparison-card">
                         <div class="metric-label">Est. Tokens</div>
                         <div class="comparison-row">
@@ -1204,9 +1063,8 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- ✅ MODIFIED: Medical Terms Comparison WITHOUT Delta -->
-                <div class="col-md-4">
+
+                <div class="col-md-4 mb-3">
                     <div class="metric-comparison-card">
                         <div class="metric-label">Medical Terms</div>
                         <div class="comparison-row">
@@ -1218,19 +1076,17 @@
                                 <span class="label">After:</span>
                                 <span class="value" style="color: ${optimizedMedicalDensity > 0 ? '#28a745' : '#dc3545'}">${optimizedMedicalDensity}%</span>
                             </div>
-                            <!-- ✅ NO CHANGE INDICATOR FOR MEDICAL TERMS -->
                         </div>
                     </div>
                 </div>
-                
-                <!-- Patient Info & Context (After only) -->
-                <div class="col-md-6">
+
+                <div class="col-md-6 mt-3">
                     <div class="prompt-metric">
                         <div class="prompt-metric-value">${Math.round((optimizedMetrics.patient_specificity || 0) * 100)}%</div>
                         <div class="prompt-metric-label">Patient Info Extracted</div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 mt-3">
                     <div class="prompt-metric">
                         <div class="prompt-metric-value">${Math.round((optimizedMetrics.context_utilization || 0) * 100)}%</div>
                         <div class="prompt-metric-label">Context Utilization</div>
@@ -1241,11 +1097,9 @@
             promptSection.style.display = 'block';
         }
 
-        // ✅ Create Energy Chart (positioned below both metrics sections)
         function createEnergyChart(energyData) {
             const ctx = document.getElementById('energyChart').getContext('2d');
 
-            // Destroy existing chart if it exists
             if (window.energyChartInstance) {
                 window.energyChartInstance.destroy();
             }
@@ -1260,8 +1114,8 @@
                             energyData.optimized_tokens,
                             energyData.tokens_reduced
                         ],
-                        backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1'],
-                        borderColor: ['#ff5252', '#26a69a', '#2196f3'],
+                        backgroundColor: ['#007bff', '#28a745', '#17a2b8'],
+                        borderColor: ['#0056b3', '#218838', '#138496'],
                         borderWidth: 1
                     }]
                 },
@@ -1288,11 +1142,9 @@
                 }
             });
 
-            // Show the chart container
             document.getElementById('energyChartSection').style.display = 'block';
         }
 
-        // ✅ ENHANCED: Generate with MARKDOWN RENDERING
         function generateFromPrompt() {
             const finalPrompt = document.getElementById('optimizedPrompt').value.trim();
 
@@ -1306,7 +1158,6 @@
                 return;
             }
 
-            // Show loading state
             document.getElementById('aiResponseSection').style.display = 'none';
 
             const loadingDiv = document.createElement('div');
@@ -1336,16 +1187,13 @@
                     if (loading) loading.remove();
 
                     if (data.success) {
-                        // ✅ RENDER MARKDOWN: Convert markdown to HTML
                         const markdownText = data.ai_response;
                         const htmlContent = marked.parse(markdownText);
                         const responseElement = document.getElementById('aiResponse');
 
-                        // Set the HTML content and store original markdown for copying
                         responseElement.innerHTML = htmlContent;
                         responseElement.setAttribute('data-original-markdown', markdownText);
 
-                        // Show generation info
                         document.getElementById('generationInfo').innerHTML =
                             `<strong>📊 Generation Info:</strong> ` +
                             `Response: ${data.generation_info.response_length} chars | ` +
@@ -1380,17 +1228,14 @@
             document.getElementById('energyChartSection').style.display = 'none';
             document.getElementById('comparisonIndicator').style.display = 'none';
 
-            // Remove any loading indicators
             const loadingElements = document.querySelectorAll('#optimizationLoading, #generationLoading');
             loadingElements.forEach(el => el.remove());
 
-            // Destroy existing energy chart
             if (window.energyChartInstance) {
                 window.energyChartInstance.destroy();
                 window.energyChartInstance = null;
             }
 
-            // Scroll back to top of form
             document.getElementById('userQuery').scrollIntoView({
                 behavior: 'smooth',
                 block: 'center'
@@ -1402,25 +1247,22 @@
             resetOptimization();
         }
 
-        // ✅ ENHANCED: Copy original markdown text
         function copyResponse() {
             const responseElement = document.getElementById('aiResponse');
             const originalMarkdown = responseElement.getAttribute('data-original-markdown');
             const textToCopy = originalMarkdown || responseElement.textContent;
 
             navigator.clipboard.writeText(textToCopy).then(function () {
-                // Show success message
-                document.getElementById('systemResults').innerHTML =
-                    '<div class="alert alert-success">✅ Response copied to clipboard (original markdown format)!</div>';
+                document.getElementById('loginStatus').innerHTML =
+                    '<div class="text-success small">✅ Response copied!</div>';
                 setTimeout(() => {
-                    document.getElementById('systemResults').innerHTML = '';
+                    document.getElementById('loginStatus').innerHTML = '<strong>Logged in as:</strong><br>' + currentUser.name + '<br><small>(' + currentUser.role + ')</small>';
                 }, 3000);
             }).catch(function (err) {
                 alert('❌ Could not copy response: ' + err);
             });
         }
 
-        // Document upload functionality
         document.getElementById('uploadForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
