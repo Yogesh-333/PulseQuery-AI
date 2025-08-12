@@ -38,16 +38,16 @@
             line-height: 1.6;
         }
 
-        /* ✅ MODERN NAVBAR */
+        /* ✅ CHANGE 1: Updated Top Bar Color */
         .navbar-custom {
-            background: rgba(255, 255, 255, 0.95);
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
             backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: var(--shadow-sm);
         }
 
         .navbar-brand {
-            color: var(--gray-900) !important;
+            color: white !important;
             font-weight: 700;
             font-size: 1.25rem;
             display: flex;
@@ -55,7 +55,7 @@
         }
 
         .navbar-text {
-            color: var(--gray-600) !important;
+            color: white !important;
             font-weight: 500;
         }
 
@@ -64,7 +64,7 @@
             height: 40px;
             margin-right: 12px;
             border-radius: 10px;
-            background: var(--blue-light);
+            background: rgba(255, 255, 255, 0.2);
             padding: 6px;
         }
 
@@ -162,19 +162,33 @@
             text-align: left;
         }
 
+        /* ✅ CHANGE 3: Updated AI Response Background Color */
         .chat-message.ai .chat-bubble {
-            background: var(--white);
-            color: var(--gray-900);
-            border: 1px solid var(--gray-200);
+            background: #e6f3ff;
+            color: #1e3a8a;
+            border: 1px solid #bfdbfe;
             box-shadow: var(--shadow-sm);
         }
 
-        /* ✅ MODERN METRICS - WHITE CARDS */
+        /* ✅ CHANGE 4: Loading Message Style */
+        .chat-loading {
+            background: #f0f9ff;
+            color: #3b82f6;
+            border: 1px solid #bfdbfe;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ✅ CHANGE 2: Larger Energy Metrics Cards */
+
         .energy-metric {
             background: var(--white);
             border: 1px solid var(--gray-200);
             border-radius: 16px;
-            padding: 24px;
+            padding: 20px 16px;
+            /* Reduced from 32px 24px */
             text-align: center;
             margin-bottom: 16px;
             transition: all 0.3s ease;
@@ -188,19 +202,23 @@
         }
 
         .energy-value {
-            font-size: 2rem;
+            font-size: 1.8rem;
+            /* Reduced from 2.5rem */
             font-weight: 800;
             color: var(--gray-900);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            /* Reduced from 8px */
         }
 
         .energy-label {
-            font-size: 0.875rem;
+            font-size: 0.75rem;
+            /* Reduced from 0.875rem */
             color: var(--gray-600);
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+
 
         /* ✅ MODERN PLACEHOLDER CONTENT */
         .placeholder-content {
@@ -472,6 +490,7 @@
         </div>
     </nav>
 
+    <!-- Main Bento Grid Container -->
     <div class="container-fluid">
         <div class="row">
             <!-- Left Column: Chat Interface -->
@@ -593,19 +612,6 @@ Examples:
 
                     <div id="uploadResult" class="mt-3"></div>
                 </div>
-
-                <!-- Quick System Health Section
-                <div class="feature-section">
-                    <h4 class="section-header">
-                        <span>❤️</span>
-                        System Health
-                    </h4>
-                    <div class="d-flex gap-2 mb-3 flex-wrap">
-                        <button class="btn btn-info btn-sm" onclick="checkSystemHealth()">Check Health</button>
-                        <button class="btn btn-warning btn-sm" onclick="checkRAGStatus()">RAG Status</button>
-                    </div>
-                    <div id="healthStatus"></div>
-                </div> -->
             </div>
         </div>
     </div>
@@ -615,6 +621,29 @@ Examples:
         let sessionId = null;
         let userName = null;
         let energyChartInstance = null;
+
+        // ✅ CHANGE 4: Loading functions for chat window
+        function addLoadingToChatWindow() {
+            const container = document.getElementById('chatContainer');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-message';
+            loadingDiv.className = 'chat-message ai';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble chat-loading';
+            bubble.innerHTML = `<div class="loading-spinner"></div> Generating AI response...`;
+
+            loadingDiv.appendChild(bubble);
+            container.appendChild(loadingDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeLoadingFromChatWindow() {
+            const loadingDiv = document.getElementById('loading-message');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
 
         // Session validation function
         function validateSession() {
@@ -766,7 +795,7 @@ Examples:
             }
         }
 
-        // Generate AI response
+        // ✅ CHANGE 4: Generate AI response with loading in chat window
         async function generateResponse() {
             const finalPrompt = document.getElementById('optimizedPrompt').value.trim();
 
@@ -775,6 +804,8 @@ Examples:
                 return;
             }
 
+            // Add loading to chat window
+            addLoadingToChatWindow();
             showStatus('🤖 Generating AI response...', 'info');
 
             try {
@@ -793,6 +824,9 @@ Examples:
 
                 const data = await response.json();
 
+                // Remove loading from chat window
+                removeLoadingFromChatWindow();
+
                 if (data.success) {
                     addChatMessage(data.ai_response, 'ai');
                     showStatus('✅ AI response generated successfully!', 'success');
@@ -800,6 +834,8 @@ Examples:
                     showStatus('❌ Generation failed: ' + (data.error || 'Unknown error'), 'danger');
                 }
             } catch (error) {
+                // Remove loading on error too
+                removeLoadingFromChatWindow();
                 showStatus('❌ Network error: ' + error.message, 'danger');
             }
         }
@@ -809,7 +845,7 @@ Examples:
             const container = document.getElementById('energyMetrics');
 
             container.innerHTML = `
-                <div class="col-md-5 col-lg-2">
+                <div class="col-md-6 col-lg-3">
                     <div class="energy-metric">
                         <div class="energy-value">${energyData.tokens_reduced}</div>
                         <div class="energy-label">Tokens Saved</div>
@@ -971,46 +1007,6 @@ Examples:
                 }
             } catch (error) {
                 showUploadStatus('❌ Network error: ' + error.message, 'danger');
-            }
-        }
-
-        // System health check
-        async function checkSystemHealth() {
-            try {
-                const response = await fetch('/health');
-                const data = await response.json();
-
-                let html = '<h6 style="color: var(--gray-900); font-weight: 600; margin-bottom: 16px;">System Health Status:</h6><div class="row">';
-                Object.entries(data.components || {}).forEach(([key, value]) => {
-                    const status = value.includes('✅') ? 'success' : value.includes('🔄') ? 'warning' : 'danger';
-                    html += `<div class="col-md-6 mb-2"><span class="badge bg-${status} me-2">${key.replace('_', ' ')}</span>${value}</div>`;
-                });
-                html += '</div>';
-
-                document.getElementById('healthStatus').innerHTML = html;
-            } catch (error) {
-                document.getElementById('healthStatus').innerHTML = '<div class="alert alert-danger">Health check failed</div>';
-            }
-        }
-
-        // RAG status check
-        async function checkRAGStatus() {
-            try {
-                const response = await fetch('/api/rag/stats', {
-                    headers: { 'X-Session-ID': sessionId }
-                });
-                const data = await response.json();
-
-                let html = '<h6 style="color: var(--gray-900); font-weight: 600; margin-bottom: 16px;">RAG System Status:</h6>';
-                if (data.rag_stats) {
-                    Object.entries(data.rag_stats).forEach(([key, value]) => {
-                        html += `<p><strong>${key.replace('_', ' ')}:</strong> ${value}</p>`;
-                    });
-                }
-
-                document.getElementById('healthStatus').innerHTML = html;
-            } catch (error) {
-                document.getElementById('healthStatus').innerHTML = '<div class="alert alert-danger">RAG status check failed</div>';
             }
         }
 
