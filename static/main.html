@@ -44,7 +44,6 @@
             flex-grow: 1;
         }
 
-
         /* Updated Top Bar Color */
         .navbar-custom {
             background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
@@ -104,8 +103,7 @@
             gap: 12px;
         }
 
-        /* Larger Energy Metrics Cards */
-
+        /* ✅ FIXED: Original Energy Metrics Cards with Proper Value Fitting */
         .energy-metric {
             background: var(--white);
             border: 1px solid var(--gray-200);
@@ -115,6 +113,11 @@
             margin-bottom: 16px;
             transition: all 0.3s ease;
             box-shadow: var(--shadow-md);
+            min-height: 120px;
+            /* ✅ FIXED: Ensure consistent height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .energy-metric:hover {
@@ -124,10 +127,14 @@
         }
 
         .energy-value {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
+            /* ✅ FIXED: Slightly smaller to fit better */
             font-weight: 800;
             color: var(--gray-900);
             margin-bottom: 6px;
+            word-break: break-all;
+            /* ✅ FIXED: Prevent overflow */
+            line-height: 1.2;
         }
 
         .energy-label {
@@ -136,8 +143,8 @@
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            margin-top: auto;
         }
-
 
         /* MODERN PLACEHOLDER CONTENT */
         .placeholder-content {
@@ -333,7 +340,17 @@
             }
 
             .energy-value {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
+                /* ✅ FIXED: Even smaller on mobile */
+            }
+
+            .comparison-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .before-after {
+                width: 100%;
             }
         }
 
@@ -436,7 +453,7 @@ Examples:
                             <div class="placeholder-icon">⚡📊</div>
                             <div class="placeholder-title">Analytics Ready</div>
                             <div class="placeholder-subtitle">Submit a medical query to see optimization metrics,
-                                energy savings, and a detailed before-and-after comparison.</div>
+                                energy savings (kWh), and a detailed before-and-after comparison.</div>
                         </div>
                     </div>
                 </div>
@@ -537,10 +554,10 @@ Examples:
             }
         }
 
-        // Optimize prompt
+        // ✅ FIXED: Optimize prompt with proper kWh and rounded value handling
         async function optimizePrompt() {
             const query = document.getElementById('userQuery').value.trim();
-            const useContext = document.getElementById('useContext');
+            const useContext = document.getElementById('useContext').checked;
 
             if (!query) {
                 showStatus('Please enter a medical query first.', 'warning');
@@ -568,11 +585,12 @@ Examples:
                     document.getElementById('optimizedPrompt').value = data.optimized_prompt;
                     document.getElementById('optimizedPromptSection').style.display = 'block';
 
+                    // ✅ FIXED: Update analytics with all proper values in kWh and rounded
                     if (data.energy_metrics && data.original_metrics && data.metrics) {
                         updateAnalytics(data.energy_metrics, data.original_metrics, data.metrics);
                     }
 
-                    showStatus('✅ Prompt optimized successfully! Analytics updated.', 'success');
+                    showStatus('✅ Prompt optimized successfully! Analytics updated with kWh values.', 'success');
                 } else {
                     showStatus('❌ Optimization failed: ' + (data.error || 'Unknown error'), 'danger');
                 }
@@ -581,10 +599,11 @@ Examples:
             }
         }
 
-        // Update all analytics in one go
+        // ✅ COMPLETELY FIXED: Update analytics with kWh conversion and proper rounding
         function updateAnalytics(energyData, originalMetrics, optimizedMetrics) {
             const container = document.getElementById('analyticsContainer');
 
+            // ✅ FIXED: Calculate all values with proper defaults and rounding
             const originalLength = originalMetrics.length || 0;
             const optimizedLength = optimizedMetrics.length || 0;
             const originalTokens = originalMetrics.token_estimate || 0;
@@ -592,29 +611,48 @@ Examples:
             const originalMedical = Math.round((originalMetrics.medical_terminology_density || 0) * 100);
             const optimizedMedical = Math.round((optimizedMetrics.medical_terminology_density || 0) * 100);
 
+            // ✅ FIXED: Energy metrics with kWh conversion and proper rounding
+            const tokensReduced = energyData.tokens_reduced || 0;
+            const energySavedKwh = energyData.energy_saved_kwh || 0;  // Already in kWh from backend
+            const efficiencyPercent = energyData.efficiency_improvement_percent || 0;  // Already rounded
+            const costSavedUsd = energyData.cost_saved_usd || 0;
+
+            // ✅ FIXED: Format values to prevent card overflow
+            const formatLargeNumber = (num) => {
+                if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+                if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+                return num.toString();
+            };
+
+            const formatSmallNumber = (num, decimals = 6) => {
+                if (num === 0) return '0';
+                if (num < 0.000001) return num.toExponential(2);
+                return num.toFixed(decimals);
+            };
+
             container.innerHTML = `
                 <div class="row">
                     <div class="col-md-6 col-lg-3">
                         <div class="energy-metric">
-                            <div class="energy-value">${energyData.tokens_reduced}</div>
+                            <div class="energy-value">${formatLargeNumber(tokensReduced)}</div>
                             <div class="energy-label">Tokens Saved</div>
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-3">
                         <div class="energy-metric">
-                            <div class="energy-value">${energyData.energy_saved_wh.toFixed(6)} Wh</div>
+                            <div class="energy-value">${formatSmallNumber(energySavedKwh, 9)} kWh</div>
                             <div class="energy-label">Energy Saved 🌱</div>
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-3">
                         <div class="energy-metric">
-                            <div class="energy-value">${energyData.efficiency_improvement_percent}%</div>
+                            <div class="energy-value">${efficiencyPercent}%</div>
                             <div class="energy-label">Efficiency Gain</div>
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-3">
                         <div class="energy-metric">
-                            <div class="energy-value">$${energyData.cost_saved_usd.toFixed(6)}</div>
+                            <div class="energy-value">$${formatSmallNumber(costSavedUsd, 8)}</div>
                             <div class="energy-label">Cost Savings 💵</div>
                         </div>
                     </div>
@@ -629,18 +667,18 @@ Examples:
                     <div class="comparison-card">
                         <div class="comparison-header">Characters Count</div>
                         <div class="comparison-row">
-                            <div class="before-after before-metric">Before: <strong>${originalLength}</strong></div>
-                            <div class="before-after after-metric">After: <strong>${optimizedLength}</strong></div>
-                            <div class="badge bg-secondary">Change: ${optimizedLength - originalLength >= 0 ? '+' : ''}${optimizedLength - originalLength}</div>
+                            <div class="before-after before-metric">Before: <strong>${originalLength.toLocaleString()}</strong></div>
+                            <div class="before-after after-metric">After: <strong>${optimizedLength.toLocaleString()}</strong></div>
+                            <div class="badge bg-secondary">Change: ${optimizedLength - originalLength >= 0 ? '+' : ''}${(optimizedLength - originalLength).toLocaleString()}</div>
                         </div>
                     </div>
                     
                     <div class="comparison-card">
                         <div class="comparison-header">Estimated Tokens</div>
                         <div class="comparison-row">
-                            <div class="before-after before-metric">Before: <strong>~${originalTokens}</strong></div>
-                            <div class="before-after after-metric">After: <strong>~${optimizedTokens}</strong></div>
-                            <div class="badge bg-secondary">Change: ${optimizedTokens - originalTokens >= 0 ? '+' : ''}${optimizedTokens - originalTokens}</div>
+                            <div class="before-after before-metric">Before: <strong>~${originalTokens.toLocaleString()}</strong></div>
+                            <div class="before-after after-metric">After: <strong>~${optimizedTokens.toLocaleString()}</strong></div>
+                            <div class="badge bg-secondary">Change: ${optimizedTokens - originalTokens >= 0 ? '+' : ''}${(optimizedTokens - originalTokens).toLocaleString()}</div>
                         </div>
                     </div>
 
@@ -654,6 +692,7 @@ Examples:
                 </div>
             `;
 
+            // ✅ FIXED: Create chart with proper data
             const ctx = document.getElementById('energyChart').getContext('2d');
 
             if (energyChartInstance) {
@@ -665,7 +704,7 @@ Examples:
                 data: {
                     labels: ['Original Tokens', 'Optimized Tokens', 'Tokens Saved'],
                     datasets: [{
-                        data: [energyData.original_tokens, energyData.optimized_tokens, energyData.tokens_reduced],
+                        data: [originalTokens, optimizedTokens, tokensReduced],
                         backgroundColor: ['#6b7280', '#374151', '#22c55e'],
                         borderColor: ['#4b5563', '#1f2937', '#16a34a'],
                         borderWidth: 2,
@@ -683,7 +722,12 @@ Examples:
                             titleColor: '#111827',
                             bodyColor: '#374151',
                             borderColor: '#e5e7eb',
-                            borderWidth: 1
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function (context) {
+                                    return context.label + ': ' + context.parsed.y.toLocaleString();
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -693,7 +737,10 @@ Examples:
                                 color: '#f3f4f6'
                             },
                             ticks: {
-                                color: '#6b7280'
+                                color: '#6b7280',
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
                             }
                         },
                         x: {
@@ -730,7 +777,7 @@ Examples:
                     <div class="placeholder-icon">⚡📊</div>
                     <div class="placeholder-title">Analytics Ready</div>
                     <div class="placeholder-subtitle">Submit a medical query to see optimization metrics,
-                        energy savings, and a detailed before-and-after comparison.</div>
+                        energy savings (kWh), and a detailed before-and-after comparison.</div>
                 </div>
             `;
 
