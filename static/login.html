@@ -39,30 +39,90 @@
             margin-bottom: 30px;
         }
 
+        /* ✅ ENHANCED LOGO FRAME WITH ANIMATED GLOWING BORDER */
         .logo-frame {
+            position: relative;
             background: white;
             border-radius: 16px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
             padding: 12px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 80px;
-            min-height: 80px;
+            min-width: 120px;
+            min-height: 120px;
             margin-bottom: 15px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        /* ✅ ANIMATED GLOWING BORDER EFFECT */
+        .logo-frame::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            width: calc(100% + 6px);
+            height: calc(100% + 6px);
+            border-radius: 20px;
+            background: conic-gradient(from 0deg,
+                    #007bff 0deg,
+                    rgba(0, 123, 255, 0.1) 90deg,
+                    #007bff 180deg,
+                    rgba(0, 123, 255, 0.1) 270deg,
+                    #007bff 360deg);
+            animation: rotate-glow 3s linear infinite;
+            z-index: -1;
+        }
+
+        /* ✅ INNER GLOW EFFECT */
+        .logo-frame::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            background: white;
+            z-index: -1;
+            box-shadow: inset 0 0 20px rgba(0, 123, 255, 0.1);
+        }
+
+        /* ✅ ROTATION ANIMATION */
+        @keyframes rotate-glow {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .logo-frame:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ✅ ENHANCED GLOW ON HOVER */
+        .logo-frame:hover::before {
+            background: conic-gradient(from 0deg,
+                    #007bff 0deg,
+                    rgba(0, 123, 255, 0.3) 90deg,
+                    #007bff 180deg,
+                    rgba(0, 123, 255, 0.3) 270deg,
+                    #007bff 360deg);
+            animation-duration: 2s;
+            /* Faster rotation on hover */
         }
 
         .logo-image {
-            width: 60px;
-            height: 60px;
+            width: 110px;
+            height: 110px;
             object-fit: contain;
             border-radius: 8px;
+            position: relative;
+            z-index: 2;
         }
 
         .logo-section h1 {
@@ -76,9 +136,10 @@
             font-size: 14px;
         }
 
+
         .btn-login {
-            /* ✅ BLUE GRADIENT BUTTON (matching background) */
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            /* ✅ GREEN GRADIENT BUTTON */
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
             border: none;
             padding: 12px 20px;
             font-weight: 600;
@@ -87,10 +148,11 @@
         }
 
         .btn-login:hover {
-            background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
             transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
         }
+
 
         .demo-credentials {
             background: #f8f9fa;
@@ -169,7 +231,8 @@
                     <div style="display:none; font-size: 24px; color: #007bff;">🏥</div>
                 </div>
                 <h1>PulseQuery AI</h1>
-                <p>Advanced Medical Intelligence Platform - Medical Terms Delta Hidden</p>
+                <p>Advanced Medical Intelligence Platform</p>
+                <p> Sustainable Energy Optimization</p>
             </div>
 
             <!-- Demo Credentials -->
@@ -223,7 +286,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-login w-100">
-                    🔐 Login to PulseQuery AI
+                    🔐 Login
                 </button>
             </form>
 
@@ -231,7 +294,7 @@
 
             <div class="text-center mt-4">
                 <small class="text-muted">
-                    Milestone 5.3 - Medical Terms Delta Hidden<br>
+                    Version 5.0<br>
                     © 2025 PulseQuery AI Platform
                 </small>
             </div>

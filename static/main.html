@@ -38,9 +38,10 @@
             line-height: 1.6;
         }
 
+
         /* ✅ CHANGE 1: Updated Top Bar Color */
         .navbar-custom {
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: var(--shadow-sm);
@@ -484,7 +485,7 @@
                 PulseQuery AI
             </a>
             <div class="d-flex align-items-center">
-                <span id="userInfo" class="navbar-text me-3">👤 Loading...</span>
+                <span id="userInfo" class="navbar-text me-3">👨🏻‍⚕️ Loading...</span>
                 <button id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</button>
             </div>
         </div>
@@ -548,14 +549,14 @@ Examples:
                 <div class="feature-section">
                     <h4 class="section-header">
                         <span>📊</span>
-                        Optimization & Energy Analytics
+                        Optimization & 🔋 Energy Analytics
                     </h4>
 
                     <!-- Initial Placeholder Content for Energy Metrics -->
                     <div id="energyMetrics" class="row">
                         <div class="col-12">
                             <div class="placeholder-content">
-                                <div class="placeholder-icon">⚡</div>
+                                <div class="placeholder-icon">⚡🔋</div>
                                 <div class="placeholder-title">Energy Analytics Ready</div>
                                 <div class="placeholder-subtitle">Submit a medical query to see optimization metrics,
                                     energy savings, and environmental impact data</div>
@@ -569,8 +570,8 @@ Examples:
                     <!-- Initial Placeholder Content for Comparison Metrics -->
                     <div id="comparisonMetrics" class="mt-4">
                         <div class="placeholder-content">
-                            <div class="placeholder-icon">📊</div>
-                            <div class="placeholder-title">Before vs After Comparison</div>
+                            <div class="placeholder-icon">⚖️</div>
+                            <div class="placeholder-title">Before 🆚 After Comparison</div>
                             <div class="placeholder-subtitle">Optimization comparison data will appear here showing
                                 improvements in tokens, efficiency, and medical terminology usage</div>
                         </div>
@@ -667,7 +668,7 @@ Examples:
             sessionId = sessionStorage.getItem('sessionId');
             userName = sessionStorage.getItem('userName');
 
-            document.getElementById('userInfo').textContent = `👤 ${userName}`;
+            document.getElementById('userInfo').textContent = `👨🏻‍⚕️ ${userName}`;
 
             document.getElementById('logoutBtn').addEventListener('click', function (e) {
                 e.preventDefault();
@@ -854,7 +855,7 @@ Examples:
                 <div class="col-md-6 col-lg-3">
                     <div class="energy-metric">
                         <div class="energy-value">${energyData.energy_saved_wh.toFixed(6)} Wh</div>
-                        <div class="energy-label">Energy Saved</div>
+                        <div class="energy-label">Energy Saved 🌱</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
@@ -866,7 +867,7 @@ Examples:
                 <div class="col-md-6 col-lg-3">
                     <div class="energy-metric">
                         <div class="energy-value">$${energyData.cost_saved_usd.toFixed(6)}</div>
-                        <div class="energy-label">Cost Savings</div>
+                        <div class="energy-label">Cost Savings 💵</div>
                     </div>
                 </div>
             `;
@@ -939,10 +940,10 @@ Examples:
             const optimizedMedical = Math.round((optimizedMetrics.medical_terminology_density || 0) * 100);
 
             container.innerHTML = `
-                <h5 style="color: var(--gray-900); font-weight: 700; margin-bottom: 20px;">📊 Before vs After Comparison</h5>
+                <h5 style="color: var(--gray-900); font-weight: 700; margin-bottom: 20px;">⚖️ Before 🆚 After Comparison</h5>
                 
                 <div class="comparison-card">
-                    <div class="comparison-header">Characters</div>
+                    <div class="comparison-header">Characters Count</div>
                     <div class="comparison-row">
                         <div class="before-after before-metric">Before: <strong>${originalLength}</strong></div>
                         <div class="before-after after-metric">After: <strong>${optimizedLength}</strong></div>
@@ -951,16 +952,16 @@ Examples:
                 </div>
                 
                 <div class="comparison-card">
-                    <div class="comparison-header">Est. Tokens</div>
+                    <div class="comparison-header">Estimated Tokens</div>
                     <div class="comparison-row">
                         <div class="before-after before-metric">Before: <strong>~${originalTokens}</strong></div>
                         <div class="before-after after-metric">After: <strong>~${optimizedTokens}</strong></div>
                         <div class="badge bg-secondary">Change: ${optimizedTokens - originalTokens >= 0 ? '+' : ''}${optimizedTokens - originalTokens}</div>
                     </div>
                 </div>
-                
+
                 <div class="comparison-card">
-                    <div class="comparison-header">Medical Terms</div>
+                    <div class="comparison-header">Medical Terms Density</div>
                     <div class="comparison-row">
                         <div class="before-after before-metric">Before: <strong>${originalMedical}%</strong></div>
                         <div class="before-after after-metric">After: <strong>${optimizedMedical}%</strong></div>
@@ -1043,8 +1044,8 @@ Examples:
 
             document.getElementById('comparisonMetrics').innerHTML = `
                 <div class="placeholder-content">
-                    <div class="placeholder-icon">📊</div>
-                    <div class="placeholder-title">Before vs After Comparison</div>
+                    <div class="placeholder-icon">⚖️</div>
+                    <div class="placeholder-title">Before 🆚 After Comparison</div>
                     <div class="placeholder-subtitle">Optimization comparison data will appear here showing improvements in tokens, efficiency, and medical terminology usage</div>
                 </div>
             `;
