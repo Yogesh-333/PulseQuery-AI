@@ -39,7 +39,7 @@
         }
 
 
-        /* ✅ CHANGE 1: Updated Top Bar Color */
+        /* Updated Top Bar Color */
         .navbar-custom {
             background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
             backdrop-filter: blur(10px);
@@ -69,7 +69,7 @@
             padding: 6px;
         }
 
-        /* ✅ MODERN CARDS */
+        /* MODERN CARDS */
         .feature-section {
             background: var(--white);
             border-radius: 20px;
@@ -98,98 +98,13 @@
             gap: 12px;
         }
 
-        /* ✅ MODERN CHAT CONTAINER */
-        .chat-container {
-            height: 400px;
-            overflow-y: auto;
-            background: var(--gray-50);
-            border: 1px solid var(--gray-200);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--gray-200) transparent;
-        }
-
-        .chat-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .chat-container::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .chat-container::-webkit-scrollbar-thumb {
-            background-color: var(--gray-200);
-            border-radius: 3px;
-        }
-
-        .chat-message {
-            margin-bottom: 16px;
-            animation: fadeInUp 0.3s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .chat-bubble {
-            display: inline-block;
-            padding: 12px 16px;
-            border-radius: 16px;
-            max-width: 70%;
-            word-wrap: break-word;
-            font-size: 0.95rem;
-        }
-
-        .chat-message.user {
-            text-align: right;
-        }
-
-        .chat-message.user .chat-bubble {
-            background: var(--blue-primary);
-            color: white;
-        }
-
-        .chat-message.ai {
-            text-align: left;
-        }
-
-        /* ✅ CHANGE 3: Updated AI Response Background Color */
-        .chat-message.ai .chat-bubble {
-            background: #e6f3ff;
-            color: #1e3a8a;
-            border: 1px solid #bfdbfe;
-            box-shadow: var(--shadow-sm);
-        }
-
-        /* ✅ CHANGE 4: Loading Message Style */
-        .chat-loading {
-            background: #f0f9ff;
-            color: #3b82f6;
-            border: 1px solid #bfdbfe;
-            font-style: italic;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* ✅ CHANGE 2: Larger Energy Metrics Cards */
+        /* Larger Energy Metrics Cards */
 
         .energy-metric {
             background: var(--white);
             border: 1px solid var(--gray-200);
             border-radius: 16px;
             padding: 20px 16px;
-            /* Reduced from 32px 24px */
             text-align: center;
             margin-bottom: 16px;
             transition: all 0.3s ease;
@@ -204,16 +119,13 @@
 
         .energy-value {
             font-size: 1.8rem;
-            /* Reduced from 2.5rem */
             font-weight: 800;
             color: var(--gray-900);
             margin-bottom: 6px;
-            /* Reduced from 8px */
         }
 
         .energy-label {
             font-size: 0.75rem;
-            /* Reduced from 0.875rem */
             color: var(--gray-600);
             font-weight: 500;
             text-transform: uppercase;
@@ -221,7 +133,7 @@
         }
 
 
-        /* ✅ MODERN PLACEHOLDER CONTENT */
+        /* MODERN PLACEHOLDER CONTENT */
         .placeholder-content {
             background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
             border: 2px dashed var(--gray-200);
@@ -250,7 +162,7 @@
             line-height: 1.6;
         }
 
-        /* ✅ MODERN COMPARISON CARDS */
+        /* MODERN COMPARISON CARDS */
         .comparison-card {
             background: var(--white);
             border: 1px solid var(--gray-200);
@@ -296,7 +208,7 @@
             border-left: 4px solid #22c55e;
         }
 
-        /* ✅ MODERN BUTTONS */
+        /* MODERN BUTTONS */
         .btn-custom {
             min-width: 140px;
             font-weight: 600;
@@ -316,36 +228,6 @@
             background: #1d4ed8 !important;
             transform: translateY(-1px);
             box-shadow: var(--shadow-lg);
-        }
-
-        .btn-success {
-            background: #22c55e !important;
-            color: white !important;
-        }
-
-        .btn-success:hover {
-            background: #16a34a !important;
-            transform: translateY(-1px);
-        }
-
-        .btn-warning {
-            background: #f59e0b !important;
-            color: white !important;
-        }
-
-        .btn-warning:hover {
-            background: #d97706 !important;
-            transform: translateY(-1px);
-        }
-
-        .btn-info {
-            background: #06b6d4 !important;
-            color: white !important;
-        }
-
-        .btn-info:hover {
-            background: #0891b2 !important;
-            transform: translateY(-1px);
         }
 
         .btn-secondary {
@@ -371,7 +253,7 @@
             transform: translateY(-1px);
         }
 
-        /* ✅ MODERN FORM CONTROLS */
+        /* MODERN FORM CONTROLS */
         .form-control,
         .form-select {
             border-radius: 12px;
@@ -394,7 +276,7 @@
             font-size: 0.95rem;
         }
 
-        /* ✅ MODERN BADGES */
+        /* MODERN BADGES */
         .badge {
             font-weight: 600;
             padding: 6px 12px;
@@ -406,7 +288,7 @@
             background: var(--blue-primary) !important;
         }
 
-        /* ✅ MODERN LOADING SPINNER */
+        /* MODERN LOADING SPINNER */
         .loading-spinner {
             display: inline-block;
             width: 20px;
@@ -428,7 +310,7 @@
             }
         }
 
-        /* ✅ RESPONSIVE DESIGN */
+        /* RESPONSIVE DESIGN */
         @media (max-width: 768px) {
             .container-fluid {
                 padding-left: 16px;
@@ -449,7 +331,7 @@
             }
         }
 
-        /* ✅ MODERN SCROLLBAR */
+        /* MODERN SCROLLBAR */
         * {
             scrollbar-width: thin;
             scrollbar-color: var(--gray-200) transparent;
@@ -475,7 +357,6 @@
 </head>
 
 <body>
-    <!-- Modern Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">
@@ -491,21 +372,15 @@
         </div>
     </nav>
 
-    <!-- Main Bento Grid Container -->
     <div class="container-fluid">
-        <div class="row">
-            <!-- Left Column: Chat Interface -->
-            <div class="col-lg-6">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
                 <div class="feature-section">
                     <h4 class="section-header">
                         <span>💬</span>
-                        AI Medical Chat & Query Optimization
+                        Medical Prompt Optimization
                     </h4>
 
-                    <!-- Chat Messages Area -->
-                    <div id="chatContainer" class="chat-container"></div>
-
-                    <!-- Query Input -->
                     <div class="mb-4">
                         <label for="userQuery" class="form-label">Enter Medical Query</label>
                         <textarea id="userQuery" class="form-control" rows="4" placeholder="Enter your medical question or case here...
@@ -515,103 +390,40 @@ Examples:
 • 45-year-old male with diabetes presenting with foot ulcer"></textarea>
                     </div>
 
-                    <!-- Options -->
-                    <div class="form-check mb-4">
+                    <div class="form-check mb-4" , style="display: none;">
                         <input class="form-check-input" type="checkbox" id="useContext" checked>
                         <label class="form-check-label" for="useContext">
                             Use document context for optimization (recommended)
                         </label>
                     </div>
 
-                    <!-- Action Buttons -->
                     <div class="d-flex gap-3 mb-4 flex-wrap">
                         <button id="optimizeBtn" class="btn btn-primary btn-custom">🔍 Optimize Prompt</button>
-                        <button id="generateBtn" class="btn btn-success btn-custom" style="display:none;">🤖 Generate AI
-                            Response</button>
                         <button id="resetBtn" class="btn btn-secondary btn-custom" onclick="resetChat()">🔄
                             Reset</button>
                     </div>
 
-                    <!-- Optimized Prompt Display -->
                     <div id="optimizedPromptSection" style="display:none;">
-                        <label for="optimizedPrompt" class="form-label">Optimized Prompt (Editable)</label>
-                        <textarea id="optimizedPrompt" class="form-control mb-3" rows="6"></textarea>
+                        <label for="optimizedPrompt" class="form-label">Optimized Prompt (Read-only)</label>
+                        <textarea id="optimizedPrompt" class="form-control mb-3" rows="6" readonly></textarea>
                     </div>
 
-                    <!-- Status Messages -->
                     <div id="statusMessages"></div>
                 </div>
-            </div>
 
-            <!-- Right Column: Analytics & Document Upload -->
-            <div class="col-lg-6">
-                <!-- Energy Analytics Section -->
                 <div class="feature-section">
                     <h4 class="section-header">
                         <span>📊</span>
                         Optimization & 🔋 Energy Analytics
                     </h4>
-
-                    <!-- Initial Placeholder Content for Energy Metrics -->
-                    <div id="energyMetrics" class="row">
-                        <div class="col-12">
-                            <div class="placeholder-content">
-                                <div class="placeholder-icon">⚡🔋</div>
-                                <div class="placeholder-title">Energy Analytics Ready</div>
-                                <div class="placeholder-subtitle">Submit a medical query to see optimization metrics,
-                                    energy savings, and environmental impact data</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Energy Chart (initially hidden) -->
-                    <canvas id="energyChart" width="400" height="200" style="display:none; margin-top: 24px;"></canvas>
-
-                    <!-- Initial Placeholder Content for Comparison Metrics -->
-                    <div id="comparisonMetrics" class="mt-4">
+                    <div id="analyticsContainer">
                         <div class="placeholder-content">
-                            <div class="placeholder-icon">⚖️</div>
-                            <div class="placeholder-title">Before 🆚 After Comparison</div>
-                            <div class="placeholder-subtitle">Optimization comparison data will appear here showing
-                                improvements in tokens, efficiency, and medical terminology usage</div>
+                            <div class="placeholder-icon">⚡📊</div>
+                            <div class="placeholder-title">Analytics Ready</div>
+                            <div class="placeholder-subtitle">Submit a medical query to see optimization metrics,
+                                energy savings, and a detailed before-and-after comparison.</div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Document Upload Section -->
-                <div class="feature-section">
-                    <h4 class="section-header">
-                        <span>📄</span>
-                        Document Upload & Management
-                    </h4>
-
-                    <form id="uploadForm">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="documentFile" class="form-label">Select Document</label>
-                                <input type="file" id="documentFile" class="form-control" accept=".pdf,.docx,.txt"
-                                    required>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="docType" class="form-label">Document Type</label>
-                                <select id="docType" class="form-select">
-                                    <option value="medical">📋 Medical Record</option>
-                                    <option value="protocol">🔬 Clinical Protocol</option>
-                                    <option value="guideline">📚 Medical Guideline</option>
-                                    <option value="research">🧪 Research Paper</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="docLanguage" class="form-label">Language</label>
-                                <select id="docLanguage" class="form-select">
-                                    <option value="en">🇺🇸 English</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-success mt-4 btn-custom">📤 Upload Document</button>
-                    </form>
-
-                    <div id="uploadResult" class="mt-3"></div>
                 </div>
             </div>
         </div>
@@ -622,29 +434,6 @@ Examples:
         let sessionId = null;
         let userName = null;
         let energyChartInstance = null;
-
-        // ✅ CHANGE 4: Loading functions for chat window
-        function addLoadingToChatWindow() {
-            const container = document.getElementById('chatContainer');
-            const loadingDiv = document.createElement('div');
-            loadingDiv.id = 'loading-message';
-            loadingDiv.className = 'chat-message ai';
-
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble chat-loading';
-            bubble.innerHTML = `<div class="loading-spinner"></div> Generating AI response...`;
-
-            loadingDiv.appendChild(bubble);
-            container.appendChild(loadingDiv);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function removeLoadingFromChatWindow() {
-            const loadingDiv = document.getElementById('loading-message');
-            if (loadingDiv) {
-                loadingDiv.remove();
-            }
-        }
 
         // Session validation function
         function validateSession() {
@@ -675,8 +464,6 @@ Examples:
                 logout();
             });
             document.getElementById('optimizeBtn').addEventListener('click', optimizePrompt);
-            document.getElementById('generateBtn').addEventListener('click', generateResponse);
-            document.getElementById('uploadForm').addEventListener('submit', uploadDocument);
 
             document.getElementById('userQuery').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter' && e.ctrlKey) {
@@ -728,30 +515,10 @@ Examples:
             }
         }
 
-        // Add message to chat
-        function addChatMessage(message, sender) {
-            const chatContainer = document.getElementById('chatContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `chat-message ${sender}`;
-
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble';
-
-            if (sender === 'ai') {
-                bubble.innerHTML = marked.parse(message);
-            } else {
-                bubble.textContent = message;
-            }
-
-            messageDiv.appendChild(bubble);
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
         // Optimize prompt
         async function optimizePrompt() {
             const query = document.getElementById('userQuery').value.trim();
-            const useContext = document.getElementById('useContext').checked;
+            const useContext = document.getElementById('useContext');
 
             if (!query) {
                 showStatus('Please enter a medical query first.', 'warning');
@@ -759,7 +526,6 @@ Examples:
             }
 
             showStatus('🔄 Optimizing prompt and analyzing query...', 'info');
-            addChatMessage(query, 'user');
 
             try {
                 const response = await fetch('/api/prompt/optimize', {
@@ -768,7 +534,10 @@ Examples:
                         'Content-Type': 'application/json',
                         'X-Session-ID': sessionId
                     },
-                    body: JSON.stringify({ query, use_context: useContext })
+                    body: JSON.stringify({
+                        query,
+                        use_context: useContext
+                    })
                 });
 
                 const data = await response.json();
@@ -776,18 +545,12 @@ Examples:
                 if (data.success) {
                     document.getElementById('optimizedPrompt').value = data.optimized_prompt;
                     document.getElementById('optimizedPromptSection').style.display = 'block';
-                    document.getElementById('generateBtn').style.display = 'inline-block';
 
-                    if (data.energy_metrics) {
-                        updateEnergyMetrics(data.energy_metrics);
+                    if (data.energy_metrics && data.original_metrics && data.metrics) {
+                        updateAnalytics(data.energy_metrics, data.original_metrics, data.metrics);
                     }
 
-                    if (data.original_metrics && data.metrics) {
-                        updateComparisonMetrics(data.original_metrics, data.metrics);
-                    }
-
-                    showStatus('✅ Prompt optimized successfully!', 'success');
-                    addChatMessage('Prompt has been optimized. You can review and edit it below, then generate the AI response.', 'ai');
+                    showStatus('✅ Prompt optimized successfully! Analytics updated.', 'success');
                 } else {
                     showStatus('❌ Optimization failed: ' + (data.error || 'Unknown error'), 'danger');
                 }
@@ -796,83 +559,79 @@ Examples:
             }
         }
 
-        // ✅ CHANGE 4: Generate AI response with loading in chat window
-        async function generateResponse() {
-            const finalPrompt = document.getElementById('optimizedPrompt').value.trim();
+        // Update all analytics in one go
+        function updateAnalytics(energyData, originalMetrics, optimizedMetrics) {
+            const container = document.getElementById('analyticsContainer');
 
-            if (!finalPrompt) {
-                showStatus('Please optimize a prompt first.', 'warning');
-                return;
-            }
-
-            // Add loading to chat window
-            addLoadingToChatWindow();
-            showStatus('🤖 Generating AI response...', 'info');
-
-            try {
-                const response = await fetch('/api/prompt/generate-final', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Session-ID': sessionId
-                    },
-                    body: JSON.stringify({
-                        final_prompt: finalPrompt,
-                        max_tokens: 600,
-                        temperature: 0.3
-                    })
-                });
-
-                const data = await response.json();
-
-                // Remove loading from chat window
-                removeLoadingFromChatWindow();
-
-                if (data.success) {
-                    addChatMessage(data.ai_response, 'ai');
-                    showStatus('✅ AI response generated successfully!', 'success');
-                } else {
-                    showStatus('❌ Generation failed: ' + (data.error || 'Unknown error'), 'danger');
-                }
-            } catch (error) {
-                // Remove loading on error too
-                removeLoadingFromChatWindow();
-                showStatus('❌ Network error: ' + error.message, 'danger');
-            }
-        }
-
-        // Update energy metrics - WHITE CARDS ONLY
-        function updateEnergyMetrics(energyData) {
-            const container = document.getElementById('energyMetrics');
+            const originalLength = originalMetrics.length || 0;
+            const optimizedLength = optimizedMetrics.length || 0;
+            const originalTokens = originalMetrics.token_estimate || 0;
+            const optimizedTokens = optimizedMetrics.token_estimate || 0;
+            const originalMedical = Math.round((originalMetrics.medical_terminology_density || 0) * 100);
+            const optimizedMedical = Math.round((optimizedMetrics.medical_terminology_density || 0) * 100);
 
             container.innerHTML = `
-                <div class="col-md-6 col-lg-3">
-                    <div class="energy-metric">
-                        <div class="energy-value">${energyData.tokens_reduced}</div>
-                        <div class="energy-label">Tokens Saved</div>
+                <div class="row">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="energy-metric">
+                            <div class="energy-value">${energyData.tokens_reduced}</div>
+                            <div class="energy-label">Tokens Saved</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="energy-metric">
+                            <div class="energy-value">${energyData.energy_saved_wh.toFixed(6)} Wh</div>
+                            <div class="energy-label">Energy Saved 🌱</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="energy-metric">
+                            <div class="energy-value">${energyData.efficiency_improvement_percent}%</div>
+                            <div class="energy-label">Efficiency Gain</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="energy-metric">
+                            <div class="energy-value">$${energyData.cost_saved_usd.toFixed(6)}</div>
+                            <div class="energy-label">Cost Savings 💵</div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="energy-metric">
-                        <div class="energy-value">${energyData.energy_saved_wh.toFixed(6)} Wh</div>
-                        <div class="energy-label">Energy Saved 🌱</div>
+
+                <canvas id="energyChart" width="400" height="200" style="margin-top: 24px;"></canvas>
+
+                <div class="mt-4">
+                    <h5 style="color: var(--gray-900); font-weight: 700; margin-bottom: 20px;">⚖️ Before 🆚 After
+                        Comparison</h5>
+                    
+                    <div class="comparison-card">
+                        <div class="comparison-header">Characters Count</div>
+                        <div class="comparison-row">
+                            <div class="before-after before-metric">Before: <strong>${originalLength}</strong></div>
+                            <div class="before-after after-metric">After: <strong>${optimizedLength}</strong></div>
+                            <div class="badge bg-secondary">Change: ${optimizedLength - originalLength >= 0 ? '+' : ''}${optimizedLength - originalLength}</div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="energy-metric">
-                        <div class="energy-value">${energyData.efficiency_improvement_percent}%</div>
-                        <div class="energy-label">Efficiency Gain</div>
+                    
+                    <div class="comparison-card">
+                        <div class="comparison-header">Estimated Tokens</div>
+                        <div class="comparison-row">
+                            <div class="before-after before-metric">Before: <strong>~${originalTokens}</strong></div>
+                            <div class="before-after after-metric">After: <strong>~${optimizedTokens}</strong></div>
+                            <div class="badge bg-secondary">Change: ${optimizedTokens - originalTokens >= 0 ? '+' : ''}${optimizedTokens - originalTokens}</div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="energy-metric">
-                        <div class="energy-value">$${energyData.cost_saved_usd.toFixed(6)}</div>
-                        <div class="energy-label">Cost Savings 💵</div>
+
+                    <div class="comparison-card">
+                        <div class="comparison-header">Medical Terms Density</div>
+                        <div class="comparison-row">
+                            <div class="before-after before-metric">Before: <strong>${originalMedical}%</strong></div>
+                            <div class="before-after after-metric">After: <strong>${optimizedMedical}%</strong></div>
+                        </div>
                     </div>
                 </div>
             `;
 
-            // Update chart with NEUTRAL COLORS (no blue)
             const ctx = document.getElementById('energyChart').getContext('2d');
 
             if (energyChartInstance) {
@@ -885,7 +644,7 @@ Examples:
                     labels: ['Original Tokens', 'Optimized Tokens', 'Tokens Saved'],
                     datasets: [{
                         data: [energyData.original_tokens, energyData.optimized_tokens, energyData.tokens_reduced],
-                        backgroundColor: ['#6b7280', '#374151', '#22c55e'], // Gray and green, NO blue
+                        backgroundColor: ['#6b7280', '#374151', '#22c55e'],
                         borderColor: ['#4b5563', '#1f2937', '#16a34a'],
                         borderWidth: 2,
                         borderRadius: 8
@@ -894,7 +653,9 @@ Examples:
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { display: false },
+                        legend: {
+                            display: false
+                        },
                         tooltip: {
                             backgroundColor: 'rgba(255, 255, 255, 0.95)',
                             titleColor: '#111827',
@@ -924,133 +685,32 @@ Examples:
                     }
                 }
             });
-
-            document.getElementById('energyChart').style.display = 'block';
-        }
-
-        // Update comparison metrics - WHITE CARDS ONLY
-        function updateComparisonMetrics(originalMetrics, optimizedMetrics) {
-            const container = document.getElementById('comparisonMetrics');
-
-            const originalLength = originalMetrics.length || 0;
-            const optimizedLength = optimizedMetrics.length || 0;
-            const originalTokens = originalMetrics.token_estimate || 0;
-            const optimizedTokens = optimizedMetrics.token_estimate || 0;
-            const originalMedical = Math.round((originalMetrics.medical_terminology_density || 0) * 100);
-            const optimizedMedical = Math.round((optimizedMetrics.medical_terminology_density || 0) * 100);
-
-            container.innerHTML = `
-                <h5 style="color: var(--gray-900); font-weight: 700; margin-bottom: 20px;">⚖️ Before 🆚 After Comparison</h5>
-                
-                <div class="comparison-card">
-                    <div class="comparison-header">Characters Count</div>
-                    <div class="comparison-row">
-                        <div class="before-after before-metric">Before: <strong>${originalLength}</strong></div>
-                        <div class="before-after after-metric">After: <strong>${optimizedLength}</strong></div>
-                        <div class="badge bg-secondary">Change: ${optimizedLength - originalLength >= 0 ? '+' : ''}${optimizedLength - originalLength}</div>
-                    </div>
-                </div>
-                
-                <div class="comparison-card">
-                    <div class="comparison-header">Estimated Tokens</div>
-                    <div class="comparison-row">
-                        <div class="before-after before-metric">Before: <strong>~${originalTokens}</strong></div>
-                        <div class="before-after after-metric">After: <strong>~${optimizedTokens}</strong></div>
-                        <div class="badge bg-secondary">Change: ${optimizedTokens - originalTokens >= 0 ? '+' : ''}${optimizedTokens - originalTokens}</div>
-                    </div>
-                </div>
-
-                <div class="comparison-card">
-                    <div class="comparison-header">Medical Terms Density</div>
-                    <div class="comparison-row">
-                        <div class="before-after before-metric">Before: <strong>${originalMedical}%</strong></div>
-                        <div class="before-after after-metric">After: <strong>${optimizedMedical}%</strong></div>
-                        <!-- Medical Terms Delta Hidden as requested -->
-                    </div>
-                </div>
-            `;
-        }
-
-        // Document upload
-        async function uploadDocument(event) {
-            event.preventDefault();
-
-            const fileInput = document.getElementById('documentFile');
-            const docType = document.getElementById('docType').value;
-            const docLanguage = document.getElementById('docLanguage').value;
-
-            if (!fileInput.files.length) {
-                showUploadStatus('Please select a file to upload.', 'warning');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('doc_type', docType);
-            formData.append('language', docLanguage);
-
-            showUploadStatus('📤 Uploading and processing document...', 'info');
-
-            try {
-                const response = await fetch('/api/rag/upload', {
-                    method: 'POST',
-                    headers: { 'X-Session-ID': sessionId },
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showUploadStatus(`✅ Document uploaded successfully!<br>File: ${data.original_filename}<br>Chunks: ${data.chunks_created || 0}`, 'success');
-                    fileInput.value = '';
-                } else {
-                    showUploadStatus('❌ Upload failed: ' + (data.error || 'Unknown error'), 'danger');
-                }
-            } catch (error) {
-                showUploadStatus('❌ Network error: ' + error.message, 'danger');
-            }
         }
 
         // Utility functions
         function showStatus(message, type) {
             const statusDiv = document.getElementById('statusMessages');
             statusDiv.innerHTML = `<div class="alert alert-${type}" style="border-radius: 12px;">${message}</div>`;
-            setTimeout(() => { statusDiv.innerHTML = ''; }, 5000);
-        }
-
-        function showUploadStatus(message, type) {
-            const uploadDiv = document.getElementById('uploadResult');
-            uploadDiv.innerHTML = `<div class="alert alert-${type}" style="border-radius: 12px;">${message}</div>`;
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
         }
 
         function resetChat() {
             document.getElementById('userQuery').value = '';
             document.getElementById('optimizedPrompt').value = '';
             document.getElementById('optimizedPromptSection').style.display = 'none';
-            document.getElementById('generateBtn').style.display = 'none';
-            document.getElementById('chatContainer').innerHTML = '';
             document.getElementById('statusMessages').innerHTML = '';
 
-            // Reset to initial placeholder content
-            document.getElementById('energyMetrics').innerHTML = `
-                <div class="col-12">
-                    <div class="placeholder-content">
-                        <div class="placeholder-icon">⚡</div>
-                        <div class="placeholder-title">Energy Analytics Ready</div>
-                        <div class="placeholder-subtitle">Submit a medical query to see optimization metrics, energy savings, and environmental impact data</div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('comparisonMetrics').innerHTML = `
+            const analyticsContainer = document.getElementById('analyticsContainer');
+            analyticsContainer.innerHTML = `
                 <div class="placeholder-content">
-                    <div class="placeholder-icon">⚖️</div>
-                    <div class="placeholder-title">Before 🆚 After Comparison</div>
-                    <div class="placeholder-subtitle">Optimization comparison data will appear here showing improvements in tokens, efficiency, and medical terminology usage</div>
+                    <div class="placeholder-icon">⚡📊</div>
+                    <div class="placeholder-title">Analytics Ready</div>
+                    <div class="placeholder-subtitle">Submit a medical query to see optimization metrics,
+                        energy savings, and a detailed before-and-after comparison.</div>
                 </div>
             `;
-
-            document.getElementById('energyChart').style.display = 'none';
 
             if (energyChartInstance) {
                 energyChartInstance.destroy();
