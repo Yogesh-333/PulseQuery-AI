@@ -997,6 +997,16 @@ def register_routes(app):
             }), 500
 
     # Static file routes
+    @app.route('/login')
+    def login_page():
+        """Serve the login page"""
+        return send_from_directory('static', 'login.html')
+
+    @app.route('/')
+    def root_redirect():
+        """Redirect root to login page"""
+        return send_from_directory('static', 'login.html')
+
     @app.route('/main')
     def main_screen():
         """Serve the main screen"""
