@@ -273,9 +273,9 @@ If you face issues:
 
 ---
 
-> 💡 Do you want me to also **add GitHub badges** and a **system architecture diagram section** so this README looks more like a professional open-source project?  
-> This would make it visually stand out and more appealing to contributors and users.
-
+### Refrence
+https://huggingface.co/abhinand/MedEmbed-base-v0.1
+https://huggingface.co/unsloth/medgemma-4b-it-GGUF/tree/main
 
 
 
