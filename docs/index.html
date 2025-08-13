@@ -1,11 +1,487 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PUlse Query AI</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PulseQuery AI – Medical AI System</title>
+<style>
+  :root{
+    --bg:#0b1220;
+    --card:#101a2f;
+    --muted:#a8b3cf;
+    --text:#e6eaf2;
+    --accent:#7aa2ff;
+    --accent-2:#5eead4;
+    --code:#0e1729;
+    --border:#1e2a44;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+    background: radial-gradient(1000px 600px at 10% -10%, rgba(122,162,255,.08), transparent 60%),
+                radial-gradient(1000px 600px at 110% 10%, rgba(94,234,212,.08), transparent 60%),
+                var(--bg);
+    color: var(--text);
+    line-height:1.6;
+  }
+  .wrap{max-width: 1050px; margin: 32px auto; padding: 0 20px 40px;}
+  header{
+    border:1px solid var(--border);
+    background: linear-gradient(180deg, rgba(16,26,47,.6), rgba(16,26,47,.9));
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  }
+  h1{font-size: clamp(28px, 3.5vw, 40px); margin: 0 0 6px; letter-spacing:.3px}
+  .subtitle{opacity:.9; margin: 6px 0 0; font-size: clamp(14px, 2.2vw, 18px); color: var(--muted)}
+  .badges{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+  .badge{border:1px solid var(--border); background: rgba(122,162,255,.10); color:#dbe6ff; padding:6px 10px; border-radius:999px; font-size:12px}
+  nav.toc{
+    margin-top:18px; padding:16px; border:1px dashed var(--border); border-radius:12px;
+    background: rgba(16,26,47,.6);
+  }
+  nav.toc a{color:var(--accent); text-decoration:none}
+  nav.toc a:hover{text-decoration:underline}
+  section{
+    margin-top:26px;
+    border:1px solid var(--border);
+    background: var(--card);
+    border-radius:16px;
+    padding:22px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  }
+  h2{margin-top:0; font-size: 24px}
+  h3{font-size: 20px; margin-top:18px}
+  code, pre{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  pre{
+    background: var(--code);
+    border:1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    overflow:auto;
+  }
+  code.inline{background: rgba(94,234,212,.12); padding:2px 6px; border-radius:6px; border:1px solid rgba(94,234,212,.25)}
+  a{color: var(--accent);}
+  .callout{
+    border-left:4px solid var(--accent-2);
+    background: rgba(94,234,212,.08);
+    padding:12px 14px; border-radius:10px; margin:12px 0;
+  }
+  ul, ol{padding-left: 22px}
+  .grid{display:grid; gap:16px}
+  .two{grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));}
+  footer{opacity:.7; text-align:center; margin:26px 0 10px; font-size:13px}
+  .hr{height:1px; background:linear-gradient(90deg, transparent, #1e2a44, transparent); margin: 24px 0}
+</style>
 </head>
 <body>
-    <h1>Project</h1>
+  <div class="wrap">
+    <header>
+      <h1>🏥 PulseQuery AI – Medical AI System</h1>
+      <p class="subtitle"><strong>Advanced Medical AI System</strong> with MedGemma Model, Medical Document Processing &amp; RAG Technology</p>
+      <div class="badges">
+        <span class="badge">Python 3.8+</span>
+        <span class="badge">Flask</span>
+        <span class="badge">PyTorch</span>
+        <span class="badge">Transformers</span>
+        <span class="badge">ChromaDB</span>
+        <span class="badge">llama-cpp-python</span>
+        <span class="badge">CUDA (optional)</span>
+      </div>
+      <nav class="toc">
+        <strong>Contents:</strong>
+        <div class="grid two">
+          <div>
+            <a href="#overview">Overview</a> •
+            <a href="#features">Features</a> •
+            <a href="#prereq">Prerequisites</a> •
+            <a href="#install">Installation</a> •
+            <a href="#config">Configuration</a>
+          </div>
+          <div>
+            <a href="#run">Run</a> •
+            <a href="#testing">Testing</a> •
+            <a href="#web">Web UI</a> •
+            <a href="#api">API</a> •
+            <a href="#deviations">Design Deviations</a> •
+            <a href="#troubleshooting">Troubleshooting</a> •
+            <a href="#security">Security</a> •
+            <a href="#monitoring">Monitoring</a> •
+            <a href="#contrib">Contributing</a> •
+            <a href="#license">License</a> •
+            <a href="#support">Support</a>
+          </div>
+        </div>
+      </nav>
+      <div class="callout">
+        <p><strong>⚠️ Important:</strong> Download <code class="inline">medgemma-4b-it-Q8_0.gguf</code> from
+        <a href="https://huggingface.co/unsloth/medgemma-4b-it-GGUF/tree/main" target="_blank" rel="noopener">Hugging Face</a>
+        and place it in the <code class="inline">models/</code> folder.</p>
+        <p>Mind map: <a href="https://miro.com/app/board/uXjVJYWSi6c=/?share_link_id=134124900492" target="_blank" rel="noopener">Start here</a>.</p>
+      </div>
+    </header>
+
+    <section id="overview">
+      <h2>📋 Overview</h2>
+      <p><strong>PulseQuery AI</strong> is a comprehensive medical AI system designed to provide accurate, evidence-backed answers to clinical queries. It combines cutting-edge AI technologies with a strong emphasis on data privacy and security, making it suitable for use within a hospital's private network.</p>
+      <ul>
+        <li><strong>MedGemma 4B</strong>: A specialized medical language model with GPU acceleration.</li>
+        <li><strong>MedEmbed</strong>: Specialized embedding models for medical and clinical data, used for document retrieval and semantic search.</li>
+        <li><strong>RAG System</strong>: Retrieval-Augmented Generation that grounds AI responses in a local knowledge base.</li>
+        <li><strong>Document Processing</strong>: Ingestion and analysis of PDFs, DOCX, and TXT.</li>
+        <li><strong>Authentication</strong>: Role-based access control for different medical professionals.</li>
+      </ul>
+    </section>
+
+    <section id="features">
+      <h2>🎯 Features</h2>
+      <ul>
+        <li>🤖 <strong>Medical AI Generation</strong>: Specialized medical report generation and answers.</li>
+        <li>📄 <strong>Document Upload &amp; Processing</strong>: Ingest and analyze local medical documents.</li>
+        <li>🔍 <strong>Semantic Search</strong>: Medical-specialized document retrieval to find highly relevant information.</li>
+        <li>🧠 <strong>RAG-Enhanced Responses</strong>: Context-aware, grounded answers that reduce hallucinations.</li>
+        <li>🔐 <strong>Authentication System</strong>: Role-based permissions for doctors, nurses, and administrators.</li>
+        <li>🖥️ <strong>Web Interface</strong>: A complete UI for easy interaction and testing.</li>
+        <li>⚡ <strong>GPU Support</strong>: CUDA acceleration for faster inference and processing.</li>
+      </ul>
+    </section>
+
+    <section id="prereq">
+      <h2>🛠️ Prerequisites</h2>
+      <h3>System Requirements</h3>
+      <ul>
+        <li><strong>Python:</strong> 3.8 or higher</li>
+        <li><strong>RAM:</strong> 8GB+ (16GB recommended for GPU usage)</li>
+        <li><strong>Storage:</strong> 10GB+ free space for models and data</li>
+        <li><strong>GPU (Optional):</strong> CUDA-compatible (e.g., NVIDIA)</li>
+      </ul>
+      <h3>Dependencies</h3>
+      <ul>
+        <li>Flask 2.0+</li>
+        <li>PyTorch 1.9+</li>
+        <li>Transformers 4.20+</li>
+        <li>LangChain Community</li>
+        <li>ChromaDB</li>
+        <li>Sentence Transformers</li>
+        <li>llama-cpp-python</li>
+        <li>pypdf</li>
+        <li>python-docx</li>
+        <li>Others in <code class="inline">requirements.txt</code></li>
+      </ul>
+    </section>
+
+    <section id="install">
+      <h2>🚀 Installation</h2>
+      <h3>1) Clone the Repository</h3>
+      <pre><code class="language-bash">git clone https://github.com/your-username/pulsequery-ai.git
+cd pulsequery-ai</code></pre>
+
+      <h3>2) Create Virtual Environment</h3>
+      <pre><code class="language-bash"># Windows
+python -m venv venv
+venv\Scripts ctivate
+
+# Linux/Mac
+python -m venv venv
+source venv/bin/activate</code></pre>
+
+      <h3>3) Install Dependencies</h3>
+      <pre><code class="language-bash"># Core dependencies
+pip install -r requirements.txt
+
+# Or install manually:
+pip install flask torch transformers sentence-transformers
+pip install chromadb langchain-community
+pip install llama-cpp-python pypdf python-docx
+pip install sqlite3 uuid typing-extensions</code></pre>
+
+      <h3>4) Download Models</h3>
+      <p>Create a <code class="inline">models/</code> directory and download <code class="inline">medgemma-4b-it-Q8_0.gguf</code> for efficient local inference with <code class="inline">llama-cpp-python</code>.</p>
+      <pre><code class="language-bash">mkdir models
+# Download medgemma-4b-it-Q8_0.gguf to models/ directory</code></pre>
+
+      <h3>5) Project Structure</h3>
+      <pre><code>pulsequery-ai/
+├── app.py                 # Main Flask application
+├── config/
+│   └── config.py         # Configuration settings
+├── core/
+│   ├── medgemma_inference.py  # MedGemma model handler
+│   └── rag_system.py         # RAG system implementation
+├── services/
+│   ├── auth_service.py       # Authentication service
+│   ├── session_manager.py    # Session management
+│   └── auth_decorators.py    # Auth decorators
+├── models/
+│   └── medgemma-4b-it-Q8_0.gguf  # Your model file
+├── data/
+│   └── chromadb/            # Vector database storage
+├── tests/
+│   └── test_rag.py         # Test scripts
+├── logs/
+│   └── app_20250805_084856.log   # Logs Store
+└── requirements.txt</code></pre>
+    </section>
+
+    <section id="config">
+      <h2>⚙️ Configuration</h2>
+      <h3>Environment Variables (Optional)</h3>
+      <pre><code class="language-bash">MEDGEMMA_MODEL_PATH=models/medgemma-4b-it-Q8_0.gguf
+RAG_DATA_DIR=data/chromadb
+FLASK_ENV=development
+FLASK_DEBUG=True</code></pre>
+
+      <h3>Config File</h3>
+      <pre><code class="language-python">class Config:
+    SECRET_KEY = 'your-secret-key-change-in-production'
+    HOST = '127.0.0.1'
+    PORT = 5000
+    # Add other configuration as needed</code></pre>
+    </section>
+
+    <section id="run">
+      <h2>🏃‍♂️ Running the Application</h2>
+      <h3>Start the Flask Server</h3>
+      <pre><code class="language-bash">python app.py</code></pre>
+
+      <h3>Expected Startup Output</h3>
+      <pre><code>🔇 Verbose logging suppressed - console output cleaned
+✅ MedGemma import successful
+✅ RAG import successful
+🔄 Creating enhanced RAG system instance...
+🧠 Selected embedding model: abhinand/MedEmbed-base-v0.1
+✅ RAG system initialized with medical embeddings
+✅ Complete application created successfully!
+🌐 Server running at http://localhost:5000</code></pre>
+
+      <h3>Access Points</h3>
+      <ul>
+        <li><strong>Main Server:</strong> <code class="inline">http://localhost:5000</code></li>
+        <li><strong>Test UI:</strong> <code class="inline">http://localhost:5000/test-ui</code></li>
+        <li><strong>Health Check:</strong> <code class="inline">http://localhost:5000/health</code></li>
+        <li><strong>API Docs:</strong> See API section below</li>
+      </ul>
+    </section>
+
+    <section id="testing">
+      <h2>🧪 Testing</h2>
+      <h3>Test Medical Embeddings</h3>
+      <pre><code class="language-bash">python tests/test_medembed.py</code></pre>
+      <pre><code>🧪 Testing MedEmbed model...
+✅ MedEmbed model loaded successfully
+✅ Embeddings computed successfully!
+📊 Shape: (3, 768)</code></pre>
+
+      <h3>Test RAG System</h3>
+      <pre><code class="language-bash">python tests/test_rag.py</code></pre>
+      <pre><code>🧪 Testing RAG system directly...
+✅ RAG system imported
+🔄 Initializing RAG with medical embeddings...
+✅ RAG system initialized successfully
+✅ RAG system test completed successfully</code></pre>
+    </section>
+
+    <section id="web">
+      <h2>🌐 Using the Web Interface</h2>
+      <ol>
+        <li>Open <code class="inline">http://localhost:5000/test-ui</code></li>
+        <li>Login with demo credentials:
+          <ul>
+            <li><strong>Doctor:</strong> <code class="inline">doctor1</code> / <code class="inline">password123</code></li>
+            <li><strong>Admin:</strong> <code class="inline">admin1</code> / <code class="inline">admin123</code></li>
+            <li><strong>Nurse:</strong> <code class="inline">nurse1</code> / <code class="inline">nurse123</code></li>
+            <li><strong>Resident:</strong> <code class="inline">resident1</code> / <code class="inline">resident123</code></li>
+          </ul>
+        </li>
+        <li>Test components: health, model status, RAG stats, document upload, and AI generation.</li>
+      </ol>
+    </section>
+
+    <section id="api">
+      <h2>📚 API Endpoints</h2>
+
+      <h3>Authentication</h3>
+      <pre><code>POST /api/auth/login
+Content-Type: application/json
+
+{
+  "user_id": "doctor1",
+  "password": "password123"
+}</code></pre>
+
+      <h3>Document Management</h3>
+      <pre><code># Upload
+POST /api/rag/upload
+X-Session-ID: your-session-id
+Content-Type: multipart/form-data</code></pre>
+
+      <pre><code># Search
+POST /api/rag/search
+X-Session-ID: your-session-id
+Content-Type: application/json
+{
+  "query": "diabetes management",
+  "max_docs": 5
+}</code></pre>
+
+      <h3>AI Generation</h3>
+      <pre><code># Simple
+POST /api/medgemma/generate-simple
+X-Session-ID: your-session-id
+Content-Type: application/json
+{
+  "prompt": "Patient Name: John Doe
+Chief Complaint: Chest pain"
+}</code></pre>
+
+      <pre><code># With RAG
+POST /api/medgemma/generate-with-rag
+X-Session-ID: your-session-id
+Content-Type: application/json
+{
+  "prompt": "Patient Name: John Doe
+Chief Complaint: Chest pain",
+  "max_tokens": 600,
+  "temperature": 0.3,
+  "use_rag": true
+}</code></pre>
+
+      <h3>Status</h3>
+      <pre><code>GET /health
+GET /api/medgemma/status
+GET /api/rag/stats</code></pre>
+    </section>
+
+    <section id="deviations">
+      <h2>🔄 Where &amp; Why We Deviated from Traditional Prompt Optimization</h2>
+      <ol>
+        <li><strong>N-gram Models → Transformer Embeddings:</strong> Modern transformer embeddings (MedEmbed) provide superior semantic understanding for medical text.</li>
+        <li><strong>Statistical Fluency → Medical Template Engineering:</strong> Domain-specific templates and quality metrics outperform generic fluency scores.</li>
+        <li><strong>Generic Tokenization → Medical Information Extraction:</strong> We added patient information extraction and specialty detection for structured prompts.</li>
+        <li><strong>Simple Scoring → Comprehensive Quality Metrics:</strong> Multi-dimensional metrics (context utilization, specificity, terminology density) reflect real clinical needs.</li>
+      </ol>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>🔧 Troubleshooting</h2>
+      <h3>"RAG system not available"</h3>
+      <ul>
+        <li>Run: <code class="inline">python tests/test_rag.py</code></li>
+        <li>Check data dir: <code class="inline">data/chromadb/</code></li>
+        <li>Install deps: <code class="inline">pip install chromadb sentence-transformers langchain-community</code></li>
+      </ul>
+
+      <h3>Model Loading Fails</h3>
+      <ul>
+        <li>Verify: <code class="inline">models/medgemma-4b-it-Q8_0.gguf</code></li>
+        <li>Ensure 8GB+ RAM</li>
+        <li>CPU mode: <code class="inline">CUDA_VISIBLE_DEVICES=""</code></li>
+      </ul>
+
+      <h3>Import Errors</h3>
+      <ul>
+        <li>Upgrade: <code class="inline">pip install --upgrade langchain-community</code></li>
+        <li>Or pin: <code class="inline">pip install langchain-community==0.0.20</code></li>
+      </ul>
+
+      <h3>Permission Errors</h3>
+      <ul>
+        <li>Fix perms: <code class="inline">chmod -R 755 data/</code></li>
+        <li>Check disk: <code class="inline">df -h</code></li>
+      </ul>
+
+      <h3>"Control Token" Spam</h3>
+      <p>Noise filtering is enabled in <code class="inline">app.py</code>. Re-check logging configuration if messages persist.</p>
+
+      <h3>Log Files</h3>
+      <pre><code class="language-bash"># View latest
+ls -la log/
+tail -f log/app_*.log
+
+# Search for specific errors
+grep "❌" log/app_*.log
+grep "RAG" log/app_*.log</code></pre>
+    </section>
+
+    <section id="performance">
+      <h2>📊 Performance Optimization</h2>
+      <ul>
+        <li><strong>GPU Acceleration:</strong> <code class="inline">python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"</code></li>
+        <li><strong>Memory Management:</strong> Background loading &amp; chunked processing.</li>
+        <li><strong>Vector Storage:</strong> ChromaDB for fast similarity search.</li>
+      </ul>
+    </section>
+
+    <section id="security">
+      <h2>🔒 Security Notes</h2>
+      <h3>Production Deployment</h3>
+      <ul>
+        <li>Change default secret keys.</li>
+        <li>Use environment variables for sensitive data.</li>
+        <li>Enable HTTPS.</li>
+        <li>Rotate and harden demo credentials.</li>
+        <li>Implement session timeouts.</li>
+      </ul>
+      <h3>Data Privacy</h3>
+      <ul>
+        <li>Medical documents stored locally.</li>
+        <li>No external data transfer.</li>
+        <li>Local embeddings computation.</li>
+        <li>Secure session management.</li>
+      </ul>
+    </section>
+
+    <section id="monitoring">
+      <h2>📈 Monitoring</h2>
+      <ul>
+        <li><strong>Health:</strong> <code class="inline">/health</code> endpoint</li>
+        <li><strong>Logs:</strong> Timestamped files in <code class="inline">log/</code></li>
+        <li><strong>Memory:</strong> Watch RAM during model load</li>
+        <li><strong>Storage:</strong> Check free disk space</li>
+      </ul>
+    </section>
+
+    <section id="contrib">
+      <h2>🤝 Contributing</h2>
+      <ol>
+        <li>Fork the repo</li>
+        <li>Create a feature branch: <code class="inline">git checkout -b feature-name</code></li>
+        <li>Make &amp; test changes</li>
+        <li>Commit: <code class="inline">git commit -am 'Add feature'</code></li>
+        <li>Push: <code class="inline">git push origin feature-name</code></li>
+        <li>Open a Pull Request</li>
+      </ol>
+    </section>
+
+    <section id="license">
+      <h2>📄 License</h2>
+      <p>MIT License – see <code class="inline">LICENSE</code>.</p>
+    </section>
+
+    <section id="support">
+      <h2>🆘 Support</h2>
+      <p>If you encounter issues:</p>
+      <ul>
+        <li>Check logs</li>
+        <li>Run the test scripts</li>
+        <li>Verify setup &amp; resources</li>
+        <li>Review configuration</li>
+      </ul>
+      <p>Create an issue with:</p>
+      <ul>
+        <li>Full error &amp; stack trace</li>
+        <li>System configuration</li>
+        <li>Reproduction steps</li>
+        <li>Relevant log excerpts</li>
+      </ul>
+      <div class="hr"></div>
+      <p><strong>🏥 PulseQuery AI – Advancing Medical AI Technology</strong></p>
+    </section>
+
+    <footer>
+      &copy; PulseQuery AI. Built for privacy-first clinical AI.
+    </footer>
+  </div>
 </body>
 </html>
