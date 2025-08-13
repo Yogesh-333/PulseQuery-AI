@@ -23,6 +23,12 @@
 - **Efficiency Metrics**: Rounded, user-friendly performance indicators
 ---
 
+## Sample ScreenShots
+
+<img width="1755" height="965" alt="image" src="https://github.com/user-attachments/assets/b92a0cfc-70de-4094-aea5-8522dcc85442" />
+<img width="1755" height="1094" alt="image" src="https://github.com/user-attachments/assets/c4124904-2cfa-42e2-b593-fddd20389a1f" />
+<img width="1755" height="2276" alt="image" src="https://github.com/user-attachments/assets/04cabaac-82b0-42c0-91c8-fc19e29003cb" />
+
 
 ## 🩺 Advanced Medical AI with MedGemma, RAG, & Document Processing
 
