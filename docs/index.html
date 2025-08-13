@@ -4,143 +4,100 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>PulseQuery AI – Energy-Efficient Medical Prompt Optimization</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#0b1220;
-    --card:#101a2f;
-    --muted:#a8b3cf;
-    --text:#e6eaf2;
-    --accent:#7aa2ff;
-    --accent-2:#5eead4;
-    --code:#0e1729;
-    --border:#1e2a44;
+  /* Custom CSS variables for theme consistency, will be primarily replaced by Tailwind classes */
+  :root {
+    --bg-primary: #0b1220;
+    --card-bg: #101a2f;
+    --text-color: #e6eaf2;
+    --muted-text: #a8b3cf;
+    --accent-blue: #7aa2ff;
+    --accent-teal: #5eead4;
+    --code-bg: #0e1729;
+    --border-color: #1e2a44;
   }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;}
-  body{
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+  body {
+    font-family: 'Inter', sans-serif;
     background: radial-gradient(1000px 600px at 10% -10%, rgba(122,162,255,.08), transparent 60%),
                 radial-gradient(1000px 600px at 110% 10%, rgba(94,234,212,.08), transparent 60%),
-                var(--bg);
-    color: var(--text);
-    line-height:1.6;
+                var(--bg-primary); /* Fallback or primary background color */
+    color: var(--text-color); /* Fallback or primary text color */
+    line-height: 1.6;
   }
-  .wrap{max-width: 1050px; margin: 32px auto; padding: 0 20px 40px;}
-  header{
-    border:1px solid var(--border);
-    background: linear-gradient(180deg, rgba(16,26,47,.6), rgba(16,26,47,.9));
-    border-radius: 18px;
-    padding: 28px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  /* Remove default margin from html, body */
+  html, body {
+    margin: 0;
+    height: 100%;
   }
-  h1{font-size: clamp(28px, 3.5vw, 40px); margin: 0 0 6px; letter-spacing:.3px; text-align: center;}
-  h1 img { display: block; margin: 0 auto 10px; } /* Center the image within H1 */
-  .subtitle{opacity:.9; margin: 6px 0 0; font-size: clamp(14px, 2.2vw, 18px); color: var(--muted)}
-  .badges{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
-  .badge{border:1px solid var(--border); background: rgba(122,162,255,.10); color:#dbe6ff; padding:6px 10px; border-radius:999px; font-size:12px}
-  nav.toc{
-    margin-top:18px; padding:16px; border:1px dashed var(--border); border-radius:12px;
-    background: rgba(16,26,47,.6);
-  }
-  nav.toc a{color:var(--accent); text-decoration:none}
-  nav.toc a:hover{text-decoration:underline}
-  section{
-    margin-top:26px;
-    border:1px solid var(--border);
-    background: var(--card);
-    border-radius:16px;
-    padding:22px;
-    box-shadow: 0 6px 18px rgba(0,0,0,.25);
-  }
-  h2{margin-top:0; font-size: 24px}
-  h3{font-size: 20px; margin-top:18px}
-  code, pre{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
-  pre{
-    background: var(--code);
-    border:1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
-    overflow:auto;
-  }
-  code.inline{background: rgba(94,234,212,.12); padding:2px 6px; border-radius:6px; border:1px solid rgba(94,234,212,.25)}
-  a{color: var(--accent);}
-  .callout{
-    border-left:4px solid var(--accent-2);
-    background: rgba(94,234,212,.08);
-    padding:12px 14px; border-radius:10px; margin:12px 0;
-  }
-  ul, ol{padding-left: 22px}
-  .grid{display:grid; gap:16px}
-  .two{grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));}
-  footer{opacity:.7; text-align:center; margin:26px 0 10px; font-size:13px}
-  .hr{height:1px; background:linear-gradient(90deg, transparent, #1e2a44, transparent); margin: 24px 0}
-  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-  th, td { border: 1px solid var(--border); padding: 8px; text-align: left; }
-  th { background-color: var(--code); }
 </style>
 </head>
-<body>
-  <div class="wrap">
-    <header>
-      <h1>
-        <img src="https://github.com/user-attachments/assets/db3d47be-4bb8-4a87-82b7-1b8cfd8afe56" alt="PulseQuery AI Logo" width="100"/>
+<body class="bg-gray-950 text-gray-100 min-h-screen antialiased">
+  <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+    <header class="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 lg:p-10 shadow-xl mb-8">
+      <h1 class="text-4xl sm:text-5xl font-extrabold text-center leading-tight tracking-tight text-white mb-4">
+        <img src="https://github.com/user-attachments/assets/db3d47be-4bb8-4a87-82b7-1b8cfd8afe56" alt="PulseQuery AI Logo" width="100" class="mx-auto mb-4"/>
         PulseQuery AI : Energy-Efficient Medical Prompt Optimization
       </h1>
-      <p class="subtitle"><strong>Advanced Medical AI System</strong> with MedGemma Model, Medical Document Processing &amp; RAG Technology</p>
-      <div class="badges">
-        <span class="badge">Python 3.8+</span>
-        <span class="badge">Flask</span>
-        <span class="badge">PyTorch</span>
-        <span class="badge">Transformers</span>
-        <span class="badge">ChromaDB</span>
-        <span class="badge">llama-cpp-python</span>
-        <span class="badge">CUDA (optional)</span>
+      <p class="text-lg sm:text-xl text-center text-gray-400 mb-6">
+        <strong class="text-white">Advanced Medical AI System</strong> with MedGemma Model, Medical Document Processing &amp; RAG Technology
+      </p>
+      <div class="flex flex-wrap justify-center gap-2 mt-4">
+        <span class="bg-blue-900/30 text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-700/50 shadow-inner">Python 3.8+</span>
+        <span class="bg-blue-900/30 text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-700/50 shadow-inner">Flask</span>
+        <span class="bg-blue-900/30 text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-700/50 shadow-inner">PyTorch</span>
+        <span class="bg-blue-900/30 text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-700/50 shadow-inner">Transformers</span>
+        <span class="bg-blue-900/30 text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-700/50 shadow-inner">ChromaDB</span>
+        <span class="bg-blue-900/30 text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-700/50 shadow-inner">llama-cpp-python</span>
+        <span class="bg-blue-900/30 text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-700/50 shadow-inner">CUDA (optional)</span>
       </div>
-      <nav class="toc">
-        <strong>Contents:</strong>
-        <div class="grid two">
+      <nav class="bg-gray-800/60 border border-gray-700 border-dashed rounded-xl p-4 mt-6 text-sm">
+        <strong class="text-gray-300 block mb-2">Contents:</strong>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
           <div>
-            <a href="#key-features-optimization">Key Features (Optimization)</a> •
-            <a href="#advanced-medical-ai">Advanced Medical AI</a> •
-            <a href="#overview">Overview</a> •
-            <a href="#features">Features</a> •
-            <a href="#prereq">Prerequisites</a> •
-            <a href="#install">Installation</a>
+            <a href="#key-features-optimization" class="text-blue-400 hover:text-blue-300 hover:underline">Key Features (Optimization)</a> &bullet;
+            <a href="#sample-screenshots" class="text-blue-400 hover:text-blue-300 hover:underline">Sample Screenshots</a> &bullet;
+            <a href="#advanced-medical-ai" class="text-blue-400 hover:text-blue-300 hover:underline">Advanced Medical AI</a> &bullet;
+            <a href="#overview" class="text-blue-400 hover:text-blue-300 hover:underline">Overview</a> &bullet;
+            <a href="#features" class="text-blue-400 hover:text-blue-300 hover:underline">Features</a> &bullet;
+            <a href="#prereq" class="text-blue-400 hover:text-blue-300 hover:underline">Prerequisites</a> &bullet;
+            <a href="#install" class="text-blue-400 hover:text-blue-300 hover:underline">Installation</a>
           </div>
           <div>
-            <a href="#access-interface">Access Interface</a> •
-            <a href="#testing">Testing</a> •
-            <a href="#api">API Endpoints</a> •
-            <a href="#deviations">Key Improvements</a> •
-            <a href="#troubleshooting">Troubleshooting</a> •
-            <a href="#performance">Performance</a> •
-            <a href="#security">Security</a> •
-            <a href="#monitoring">Monitoring</a> •
-            <a href="#contrib">Contributing</a> •
-            <a href="#license">License</a> •
-            <a href="#support">Support</a>
+            <a href="#access-interface" class="text-blue-400 hover:text-blue-300 hover:underline">Access Interface</a> &bullet;
+            <a href="#testing" class="text-blue-400 hover:text-blue-300 hover:underline">Testing</a> &bullet;
+            <a href="#api" class="text-blue-400 hover:text-blue-300 hover:underline">API Endpoints</a> &bullet;
+            <a href="#deviations" class="text-blue-400 hover:text-blue-300 hover:underline">Key Improvements</a> &bullet;
+            <a href="#troubleshooting" class="text-blue-400 hover:text-blue-300 hover:underline">Troubleshooting</a> &bullet;
+            <a href="#performance" class="text-blue-400 hover:text-blue-300 hover:underline">Performance</a> &bullet;
+            <a href="#security" class="text-blue-400 hover:text-blue-300 hover:underline">Security</a> &bullet;
+            <a href="#monitoring" class="text-blue-400 hover:text-blue-300 hover:underline">Monitoring</a> &bullet;
+            <a href="#contrib" class="text-blue-400 hover:text-blue-300 hover:underline">Contributing</a> &bullet;
+            <a href="#license" class="text-blue-400 hover:text-blue-300 hover:underline">License</a> &bullet;
+            <a href="#support" class="text-blue-400 hover:text-blue-300 hover:underline">Support</a>
           </div>
         </div>
       </nav>
-      <!-- Removed the callout from original as it wasn't in the markdown -->
     </header>
 
-    <section id="key-features-optimization">
-      <h2>✨ Key Features</h2>
-      <h3>🧠 <strong>Intelligent Prompt Optimization</strong></h3>
-      <ul>
+    <section id="key-features-optimization" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">✨ Key Features</h2>
+      <h3 class="text-2xl font-semibold text-white mb-3">🧠 Intelligent Prompt Optimization</h3>
+      <ul class="list-disc list-inside space-y-2 text-gray-300">
         <li><strong>30%+ Energy Reduction</strong>: Measurable decrease in computational energy consumption</li>
         <li><strong>Semantic Preservation</strong>: Maintains clinical meaning while compressing medical queries</li>
         <li><strong>Real-time Processing</strong>: Sub-500ms optimization with 95%+ accuracy</li>
       </ul>
-      <h3>🩺 <strong>Medical Intelligence</strong></h3>
-      <ul>
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3">🩺 Medical Intelligence</h3>
+      <ul class="list-disc list-inside space-y-2 text-gray-300">
         <li><strong>MedEmbed Integration</strong>: Specialized medical embeddings for precise clinical understanding</li>
         <li><strong>Medical Specialty Detection</strong>: Automatic classification using cosine similarity</li>
         <li><strong>Clinical Context Awareness</strong>: Smart context selection and relevance scoring</li>
       </ul>
-      <h3>⚡ <strong>Energy Analytics</strong></h3>
-      <ul>
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3">⚡ Energy Analytics</h3>
+      <ul class="list-disc list-inside space-y-2 text-gray-300">
         <li><strong>kWh Tracking</strong>: Real-time energy consumption monitoring</li>
         <li><strong>Environmental Impact</strong>: CO₂ emissions reduction calculations</li>
         <li><strong>Cost Savings</strong>: Direct energy cost analysis per optimization</li>
@@ -148,25 +105,38 @@
       </ul>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="advanced-medical-ai">
-      <h2>🩺 Advanced Medical AI with MedGemma, RAG, &amp; Document Processing</h2>
-      <p><strong>PulseQuery AI</strong> is an advanced, privacy-focused medical AI system designed to deliver accurate, evidence-backed answers to clinical queries. Built for deployment within hospital private networks, it combines <strong>state-of-the-art medical AI models</strong>, <strong>Retrieval-Augmented Generation (RAG)</strong>, and <strong>secure document processing</strong>.</p>
+    <section id="sample-screenshots" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🖼️ Sample Screenshots</h2>
+      <div class="grid grid-cols-1 gap-6">
+        <img class="w-full h-auto rounded-lg shadow-md border border-gray-700" src="https://github.com/user-attachments/assets/b92a0cfc-70de-4094-aea5-8522dcc85442" alt="PulseQuery AI Screenshot 1"/>
+        <img class="w-full h-auto rounded-lg shadow-md border border-gray-700" src="https://github.com/user-attachments/assets/c4124904-2cfa-42e2-b593-fddd20389a1f" alt="PulseQuery AI Screenshot 2"/>
+        <img class="w-full h-auto rounded-lg shadow-md border border-gray-700" src="https://github.com/user-attachments/assets/04cabaac-82b0-42c0-91c8-fc19e29003cb" alt="PulseQuery AI Screenshot 3"/>
+      </div>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="overview">
-      <h2>📋 Overview</h2>
-      <p>PulseQuery AI is built around three core principles:</p>
-      <ol>
+    <section id="advanced-medical-ai" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🩺 Advanced Medical AI with MedGemma, RAG, &amp; Document Processing</h2>
+      <p class="text-gray-300 leading-relaxed">
+        <strong>PulseQuery AI</strong> is an advanced, privacy-focused medical AI system designed to deliver accurate, evidence-backed answers to clinical queries. Built for deployment within hospital private networks, it combines <strong>state-of-the-art medical AI models</strong>, <strong>Retrieval-Augmented Generation (RAG)</strong>, and <strong>secure document processing</strong>.
+      </p>
+    </section>
+
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
+
+    <section id="overview" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">📋 Overview</h2>
+      <p class="text-gray-300 mb-4">PulseQuery AI is built around three core principles:</p>
+      <ol class="list-decimal list-inside space-y-2 text-gray-300">
         <li><strong>Accuracy</strong> – Powered by a specialized medical language model (MedGemma 4B).</li>
         <li><strong>Contextual Understanding</strong> – Enhanced with RAG and medical embeddings for grounded responses.</li>
         <li><strong>Security &amp; Privacy</strong> – All processing is performed locally, with role-based access control.</li>
       </ol>
-      <h3>Core Components</h3>
-      <ul>
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3">Core Components</h3>
+      <ul class="list-disc list-inside space-y-2 text-gray-300">
         <li><strong>MedGemma 4B</strong> – Optimized for medical queries with GPU acceleration.</li>
         <li><strong>MedEmbed</strong> – Specialized medical embedding models for semantic search and retrieval.</li>
         <li><strong>RAG System</strong> – Retrieval-Augmented Generation to ensure responses are fact-based and grounded in your own knowledge base.</li>
@@ -175,11 +145,11 @@
       </ul>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="features">
-      <h2>✨ Key Features</h2>
-      <ul>
+    <section id="features" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">✨ Key Features</h2>
+      <ul class="list-disc list-inside space-y-2 text-gray-300">
         <li>🤖 <strong>AI-Powered Medical Reports</strong> – Generate domain-specific, accurate medical answers.</li>
         <li>📄 <strong>Secure Document Upload &amp; Processing</strong> – Ingest and process local medical documents with no external API calls.</li>
         <li>🔍 <strong>Semantic Search</strong> – Medical-specialized retrieval to surface the most relevant content.</li>
@@ -190,22 +160,22 @@
       </ul>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="prereq">
-      <h2>🛠️ Prerequisites</h2>
-      <h3>System Requirements</h3>
-      <ul>
+    <section id="prereq" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🛠️ Prerequisites</h2>
+      <h3 class="text-2xl font-semibold text-white mb-3">System Requirements</h3>
+      <ul class="list-disc list-inside space-y-2 text-gray-300">
         <li><strong>Python</strong>: 3.8+</li>
         <li><strong>RAM</strong>: 8GB minimum (16GB recommended for GPU workloads)</li>
         <li><strong>Storage</strong>: 10GB+</li>
         <li><strong>GPU</strong> (optional): CUDA-compatible NVIDIA GPU for acceleration</li>
       </ul>
-      <h3>Dependencies</h3>
-      <p>Key packages:</p>
-      <pre><code class="language-bash">Flask>=2.0
-torch>=1.9
-transformers>=4.20
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3">Dependencies</h3>
+      <p class="text-gray-300 mb-3">Key packages:</p>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">Flask&gt;=2.0
+torch&gt;=1.9
+transformers&gt;=4.20
 sentence-transformers
 chromadb
 langchain-community
@@ -215,36 +185,36 @@ python-docx
 </code></pre>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="install">
-      <h2>🚀 Installation</h2>
-      <h3><strong>1. Clone the Repository</strong></h3>
-      <pre><code class="language-bash">git clone https://github.com/your-username/pulsequery-ai.git
+    <section id="install" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🚀 Installation</h2>
+      <h3 class="text-2xl font-semibold text-white mb-3"><strong>1. Clone the Repository</strong></h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">git clone https://github.com/your-username/pulsequery-ai.git
 cd pulsequery-ai
 </code></pre>
-      <h3><strong>2. Create Virtual Environment</strong></h3>
-      <p># Windows</p>
-      <pre><code class="language-bash">python -m venv venv
+      <h3 class="text-2xl font-semibold text-white mb-3"><strong>2. Create Virtual Environment</strong></h3>
+      <p class="text-gray-300 mb-1"># Windows</p>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">python -m venv venv
 venv\Scripts\activate
 </code></pre>
-      <p># Linux/Mac</p>
-      <pre><code class="language-bash">python -m venv venv
+      <p class="text-gray-300 mb-1"># Linux/Mac</p>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">python -m venv venv
 source venv/bin/activate
 </code></pre>
-      <h3><strong>3. Install Dependencies</strong></h3>
-      <pre><code class="language-bash">pip install -r requirements.txt
+      <h3 class="text-2xl font-semibold text-white mb-3"><strong>3. Install Dependencies</strong></h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">pip install -r requirements.txt
 </code></pre>
-      <p># Or install manually:</p>
-      <pre><code class="language-bash">pip install flask torch transformers sentence-transformers
+      <p class="text-gray-300 mb-1"># Or install manually:</p>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">pip install flask torch transformers sentence-transformers
 pip install chromadb langchain-community llama-cpp-python pypdf python-docx
 </code></pre>
-      <h3><strong>4. Download Models</strong></h3>
-      <p>Create models/ directory and download medgemma-4b-it-Q8_0.gguf.</p>
-      <pre><code class="language-bash">mkdir models
+      <h3 class="text-2xl font-semibold text-white mb-3"><strong>4. Download Models</strong></h3>
+      <p class="text-gray-300 mb-3">Create models/ directory and download medgemma-4b-it-Q8_0.gguf.</p>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">mkdir models
 </code></pre>
-      <p># Place medgemma-4b-it-Q8_0.gguf in models/</p>
-      <pre><code class="language-text">pulsequery-ai/
+      <p class="text-gray-300 mb-1"># Place medgemma-4b-it-Q8_0.gguf in models/</p>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-text text-gray-200">pulsequery-ai/
 ├── app.py
 ├── config/
 │   └── config.py
@@ -265,108 +235,110 @@ pip install chromadb langchain-community llama-cpp-python pypdf python-docx
 │   └── app_YYYYMMDD_HHMMSS.log
 └── requirements.txt
 </code></pre>
-      <h3><strong>Configuration</strong></h3>
-      <h4>Environment Variables</h4>
-      <p>Create .env file:</p>
-      <pre><code class="language-shell">MEDGEMMA_MODEL_PATH=models/medgemma-4b-it-Q8_0.gguf
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3"><strong>Configuration</strong></h3>
+      <h4 class="text-xl font-semibold text-gray-200 mb-2">Environment Variables</h4>
+      <p class="text-gray-300 mb-3">Create .env file:</p>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-shell text-gray-200">MEDGEMMA_MODEL_PATH=models/medgemma-4b-it-Q8_0.gguf
 RAG_DATA_DIR=data/chromadb
 FLASK_ENV=development
 FLASK_DEBUG=True
 </code></pre>
-      <h3><strong>Config File (config/config.py)</strong></h3>
-      <pre><code class="language-python">class Config:
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3"><strong>Config File (config/config.py)</strong></h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-python text-gray-200">class Config:
     SECRET_KEY = 'change-me-in-production'
     HOST = '127.0.0.1'
     PORT = 5000
 </code></pre>
-      <h3><strong>Step 5 – Running the Application</strong></h3>
-      <p>Start the Flask application:</p>
-      <pre><code class="language-bash">python app.py
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3"><strong>Step 5 – Running the Application</strong></h3>
+      <p class="text-gray-300 mb-3">Start the Flask application:</p>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">python app.py
 </code></pre>
-      <h3><em>You should see:</em></h3>
-      <pre><code>✅ MedGemma import successful
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3"><em>You should see:</em></h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-text text-gray-200">✅ MedGemma import successful
 ✅ RAG initialized
 🌐 Server running at http://localhost:5000
 </code></pre>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="access-interface">
-      <h2>🌐 Step 6 – Access the Interface</h2>
-      <ul>
-        <li><strong>Main Server</strong>: <a href="http://localhost:5000">http://localhost:5000</a></li>
-        <li><strong>Test UI</strong>: <a href="http://localhost:5000/test-ui">http://localhost:5000/test-ui</a></li>
-        <li><strong>Health Check</strong>: <a href="http://localhost:5000/health">http://localhost:5000/health</a></li>
+    <section id="access-interface" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🌐 Step 6 – Access the Interface</h2>
+      <ul class="list-disc list-inside space-y-2 text-gray-300 mb-4">
+        <li><strong>Main Server</strong>: <a href="http://localhost:5000" class="text-blue-400 hover:text-blue-300 hover:underline">http://localhost:5000</a></li>
+        <li><strong>Test UI</strong>: <a href="http://localhost:5000/test-ui" class="text-blue-400 hover:text-blue-300 hover:underline">http://localhost:5000/test-ui</a></li>
+        <li><strong>Health Check</strong>: <a href="http://localhost:5000/health" class="text-blue-400 hover:text-blue-300 hover:underline">http://localhost:5000/health</a></li>
       </ul>
-      <h3>Demo Credentials</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Role</th>
-            <th>Username</th>
-            <th>Password</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Doctor</td>
-            <td>doctor1</td>
-            <td>password123</td>
-          </tr>
-          <tr>
-            <td>Admin</td>
-            <td>admin1</td>
-            <td>admin123</td>
-          </tr>
-          <tr>
-            <td>Nurse</td>
-            <td>nurse1</td>
-            <td>nurse123</td>
-          </tr>
-          <tr>
-            <td>Resident</td>
-            <td>resident1</td>
-            <td>resident123</td>
-          </tr>
-        </tbody>
-      </table>
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3">Demo Credentials</h3>
+      <div class="overflow-x-auto rounded-lg border border-gray-700 shadow-md">
+        <table class="w-full text-left text-gray-300">
+          <thead class="text-xs uppercase bg-gray-900 text-gray-400">
+            <tr>
+              <th scope="col" class="px-6 py-3">Role</th>
+              <th scope="col" class="px-6 py-3">Username</th>
+              <th scope="col" class="px-6 py-3">Password</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="bg-gray-800 border-b border-gray-700">
+              <td class="px-6 py-4">Doctor</td>
+              <td class="px-6 py-4">doctor1</td>
+              <td class="px-6 py-4">password123</td>
+            </tr>
+            <tr class="bg-gray-800 border-b border-gray-700">
+              <td class="px-6 py-4">Admin</td>
+              <td class="px-6 py-4">admin1</td>
+              <td class="px-6 py-4">admin123</td>
+            </tr>
+            <tr class="bg-gray-800 border-b border-gray-700">
+              <td class="px-6 py-4">Nurse</td>
+              <td class="px-6 py-4">nurse1</td>
+              <td class="px-6 py-4">nurse123</td>
+            </tr>
+            <tr class="bg-gray-800">
+              <td class="px-6 py-4">Resident</td>
+              <td class="px-6 py-4">resident1</td>
+              <td class="px-6 py-4">resident123</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="testing">
-      <h2>🧪 Step 7 – Testing</h2>
-      <pre><code class="language-bash">python tests/test_medembed.py
+    <section id="testing" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🧪 Step 7 – Testing</h2>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">python tests/test_medembed.py
 </code></pre>
-      <h3><strong>Test RAG</strong></h3>
-      <pre><code class="language-bash">python tests/test_rag.py
-</code></pre>
-    </section>
-
-    <div class="hr"></div>
-
-    <section id="api">
-      <h2>📚 Step 8 – API Endpoints</h2>
-      <h3>Authentication</h3>
-      <pre><code class="language-text">POST /api/auth/login
-</code></pre>
-      <h3>Document Upload</h3>
-      <pre><code class="language-text">POST /api/rag/upload
-</code></pre>
-      <h3>Semantic Search</h3>
-      <pre><code class="language-text">POST /api/rag/search
-</code></pre>
-      <h3>AI Generation</h3>
-      <pre><code class="language-text">POST /api/medgemma/generate-with-rag
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3"><strong>Test RAG</strong></h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">python tests/test_rag.py
 </code></pre>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="deviations">
-      <h2>🔄 Step 9 – Key Improvements Over Original Plan</h2>
-      <ol>
+    <section id="api" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">📚 Step 8 – API Endpoints</h2>
+      <h3 class="text-2xl font-semibold text-white mb-3">Authentication</h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-text text-gray-200">POST /api/auth/login
+</code></pre>
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3">Document Upload</h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-text text-gray-200">POST /api/rag/upload
+</code></pre>
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3">Semantic Search</h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-text text-gray-200">POST /api/rag/search
+</code></pre>
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3">AI Generation</h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-text text-gray-200">POST /api/medgemma/generate-with-rag
+</code></pre>
+    </section>
+
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
+
+    <section id="deviations" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🔄 Step 9 – Key Improvements Over Original Plan</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-300">
         <li><strong>N-gram → Transformer Embeddings</strong> – Better semantic understanding.</li>
         <li><strong>Statistical Fluency → Medical Prompt Templates</strong> – Domain-specific prompts.</li>
         <li><strong>Basic Tokenization → Medical Info Extraction</strong> – Structured patient data.</li>
@@ -374,60 +346,60 @@ FLASK_DEBUG=True
       </ol>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="troubleshooting">
-      <h2>🔧 Step 10 – Troubleshooting</h2>
-      <h3>RAG Not Available</h3>
-      <pre><code class="language-bash">python tests/test_rag.py
+    <section id="troubleshooting" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🔧 Step 10 – Troubleshooting</h2>
+      <h3 class="text-2xl font-semibold text-white mb-3">RAG Not Available</h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">python tests/test_rag.py
 </code></pre>
-      <h3>Model Not Loading</h3>
-      <p>## Verify path to .gguf model file.</p>
-      <h3>Ensure 8GB+ RAM or force CPU mode:</h3>
-      <pre><code class="language-bash">set CUDA_VISIBLE_DEVICES=
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3">Model Not Loading</h3>
+      <p class="text-gray-300 mb-1">## Verify path to .gguf model file.</p>
+      <h3 class="text-xl font-semibold text-gray-200 mb-2">Ensure 8GB+ RAM or force CPU mode:</h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">set CUDA_VISIBLE_DEVICES=
 </code></pre>
-      <h3>Import Errors</h3>
-      <pre><code class="language-bash">pip install --upgrade langchain-community
+      <h3 class="text-2xl font-semibold text-white mt-6 mb-3">Import Errors</h3>
+      <pre class="bg-gray-900 border border-gray-700 rounded-lg p-4 text-sm overflow-auto mb-4"><code class="language-bash text-gray-200">pip install --upgrade langchain-community
 </code></pre>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="performance">
-      <h2>📊 Step 11 – Performance Optimization</h2>
-      <ul>
+    <section id="performance" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">📊 Step 11 – Performance Optimization</h2>
+      <ul class="list-disc list-inside space-y-2 text-gray-300">
         <li><strong>Enable GPU acceleration</strong> if available.</li>
         <li><strong>Use ChromaDB</strong> for fast vector search.</li>
         <li><strong>Process documents in chunks</strong> for memory efficiency.</li>
       </ul>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="security">
-      <h2>🔒 Step 12 – Security Best Practices</h2>
-      <ul>
+    <section id="security" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🔒 Step 12 – Security Best Practices</h2>
+      <ul class="list-disc list-inside space-y-2 text-gray-300">
         <li><strong>Change default credentials</strong> before production.</li>
         <li><strong>Use HTTPS</strong> for secure communication.</li>
         <li><strong>Store all medical data locally</strong> to ensure privacy.</li>
       </ul>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="monitoring">
-      <h2>📈 Step 13 – Monitoring</h2>
-      <ul>
-        <li><strong>System Health</strong> – <code class="inline">/health</code> endpoint.</li>
-        <li><strong>Logs</strong> – stored in <code class="inline">/logs</code>.</li>
+    <section id="monitoring" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">📈 Step 13 – Monitoring</h2>
+      <ul class="list-disc list-inside space-y-2 text-gray-300">
+        <li><strong>System Health</strong> – <code class="language-inline bg-emerald-900/40 text-emerald-300 px-2 py-1 rounded-md text-sm font-mono">/health</code> endpoint.</li>
+        <li><strong>Logs</strong> – stored in <code class="language-inline bg-emerald-900/40 text-emerald-300 px-2 py-1 rounded-md text-sm font-mono">/logs</code>.</li>
       </ul>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="contrib">
-      <h2>🤝 Step 14 – Contributing</h2>
-      <ol>
+    <section id="contrib" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🤝 Step 14 – Contributing</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-300">
         <li>Fork repository</li>
         <li>Create a feature branch</li>
         <li>Commit &amp; push changes</li>
@@ -435,31 +407,31 @@ FLASK_DEBUG=True
       </ol>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="license">
-      <h2>📄 Step 15 – License</h2>
-      <p>MIT License – see <code class="inline">LICENSE</code>.</p>
+    <section id="license" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">📄 Step 15 – License</h2>
+      <p class="text-gray-300">MIT License – see <code class="language-inline bg-emerald-900/40 text-emerald-300 px-2 py-1 rounded-md text-sm font-mono">LICENSE</code>.</p>
     </section>
 
-    <div class="hr"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
 
-    <section id="support">
-      <h2>🆘 Step 16 – Support</h2>
-      <p>If you face issues:</p>
-      <ul>
-        <li>Check <code class="inline">/logs</code></li>
+    <section id="support" class="bg-gray-800 border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-lg mb-8">
+      <h2 class="text-3xl font-bold text-teal-400 mb-4">🆘 Step 16 – Support</h2>
+      <p class="text-gray-300 mb-4">If you face issues:</p>
+      <ul class="list-disc list-inside space-y-2 text-gray-300">
+        <li>Check <code class="language-inline bg-emerald-900/40 text-emerald-300 px-2 py-1 rounded-md text-sm font-mono">/logs</code></li>
         <li>Run test scripts</li>
         <li>Open GitHub issue with:</li>
         <li>Error logs</li>
         <li>System configuration</li>
         <li>Steps to reproduce</li>
       </ul>
-      <div class="hr"></div>
-      <p><strong>PulseQuery AI – Advancing Medical AI Technology with Trust &amp; Accuracy</strong></p>
+      <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-8"></div>
+      <p class="text-lg font-semibold text-center text-teal-300"><strong>PulseQuery AI – Advancing Medical AI Technology with Trust &amp; Accuracy</strong></p>
     </section>
 
-    <footer>
+    <footer class="text-center text-gray-500 text-sm mt-8 opacity-80">
       &copy; PulseQuery AI. Built for privacy-first clinical AI.
     </footer>
   </div>
