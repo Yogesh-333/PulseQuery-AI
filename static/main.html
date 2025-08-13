@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseQuery AI - Modern Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --blue-primary: #2563eb;
+            --blue-light: #dbeafe;
+            --blue-gradient: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-600: #4b5563;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--blue-gradient);
+            min-height: 100vh;
+            padding-top: 80px;
+            margin: 0;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex-grow: 1;
+        }
+
+        /* Updated Top Bar Color */
+        .navbar-custom {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: 700;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-text {
+            color: white !important;
+            font-weight: 500;
+        }
+
+        .navbar-logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px;
+        }
+
+        /* MODERN CARDS */
+        .feature-section {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            padding: 32px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .feature-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        }
+
+        .section-header {
+            color: var(--gray-900);
+            margin-bottom: 24px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: -0.025em;
+            border-bottom: 3px solid var(--blue-primary);
+            padding-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ✅ FIXED: Original Energy Metrics Cards with Proper Value Fitting */
+        .energy-metric {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            padding: 20px 16px;
+            text-align: center;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+            min-height: 120px;
+            /* ✅ FIXED: Ensure consistent height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .energy-metric:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--blue-primary);
+        }
+
+        .energy-value {
+            font-size: 1.6rem;
+            /* ✅ FIXED: Slightly smaller to fit better */
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 6px;
+            word-break: break-all;
+            /* ✅ FIXED: Prevent overflow */
+            line-height: 1.2;
+        }
+
+        .energy-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: auto;
+        }
+
+        /* MODERN PLACEHOLDER CONTENT */
+        .placeholder-content {
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+            border: 2px dashed var(--gray-200);
+            border-radius: 20px;
+            padding: 48px 32px;
+            text-align: center;
+            color: var(--gray-600);
+        }
+
+        .placeholder-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+
+        .placeholder-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--gray-900);
+        }
+
+        .placeholder-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        /* MODERN COMPARISON CARDS */
+        .comparison-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .comparison-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .comparison-header {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+            font-size: 1rem;
+        }
+
+        .comparison-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .before-after {
+            padding: 12px 16px;
+            border-radius: 8px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .before-metric {
+            background-color: var(--gray-100);
+            border-left: 4px solid #f59e0b;
+        }
+
+        .after-metric {
+            background-color: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+
+        /* MODERN BUTTONS */
+        .btn-custom {
+            min-width: 140px;
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 12px 24px;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--blue-primary) !important;
+            color: white !important;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8 !important;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--gray-600) !important;
+            color: white !important;
+        }
+
+        .btn-secondary:hover {
+            background: #374151 !important;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-light {
+            border: 2px solid white !important;
+            color: white !important;
+            background: transparent !important;
+            font-weight: 600;
+        }
+
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            transform: translateY(-1px);
+        }
+
+        /* MODERN FORM CONTROLS */
+        .form-control,
+        .form-select {
+            border-radius: 12px;
+            border: 2px solid var(--gray-200);
+            padding: 12px 16px;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--blue-primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        /* MODERN BADGES */
+        .badge {
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        .bg-primary {
+            background: var(--blue-primary) !important;
+        }
+
+        /* MODERN LOADING SPINNER */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--gray-200);
+            border-top: 3px solid var(--blue-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .feature-section {
+                padding: 24px 20px;
+                margin-bottom: 24px;
+            }
+
+            .section-header {
+                font-size: 1.25rem;
+            }
+
+            .energy-value {
+                font-size: 1.4rem;
+                /* ✅ FIXED: Even smaller on mobile */
+            }
+
+            .comparison-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .before-after {
+                width: 100%;
+            }
+        }
+
+        /* MODERN SCROLLBAR */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--gray-200) transparent;
+        }
+
+        *::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: var(--gray-200);
+            border-radius: 4px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background-color: var(--gray-600);
+        }
+
+        .footer-custom {
+            background-color: #1f2937;
+            color: #d1d5db;
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 48px;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="/static/logo.png" alt="PulseQuery Logo" class="navbar-logo"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                <span style="display:none; margin-right: 12px; font-size: 24px;">🏥</span>
+                PulseQuery AI
+            </a>
+            <div class="d-flex align-items-center">
+                <span id="userInfo" class="navbar-text me-3">👨🏻‍⚕️ Loading...</span>
+                <button id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="feature-section">
+                    <h4 class="section-header">
+                        <span>💬</span>
+                        Medical Prompt Optimization
+                    </h4>
+
+                    <div class="mb-4">
+                        <label for="userQuery" class="form-label">Enter Medical Query</label>
+                        <textarea id="userQuery" class="form-control" rows="4" placeholder="Enter your medical question or case here...
+
+Examples:
+• Patient Maria Rodriguez, 67 years old, chest pain and shortness of breath
+• 45-year-old male with diabetes presenting with foot ulcer"></textarea>
+                    </div>
+
+                    <div class="form-check mb-4" style="display: none;">
+                        <input class="form-check-input" type="checkbox" id="useContext" checked>
+                        <label class="form-check-label" for="useContext">
+                            Use document context for optimization (recommended)
+                        </label>
+                    </div>
+
+                    <div class="d-flex gap-3 mb-4 flex-wrap">
+                        <button id="optimizeBtn" class="btn btn-primary btn-custom">🔍 Optimize Prompt</button>
+                        <button id="resetBtn" class="btn btn-secondary btn-custom" onclick="resetChat()">🔄
+                            Reset</button>
+                    </div>
+
+                    <div id="optimizedPromptSection" style="display:none;">
+                        <label for="optimizedPrompt" class="form-label">Optimized Prompt (Read-only)</label>
+                        <textarea id="optimizedPrompt" class="form-control mb-3" rows="6" readonly></textarea>
+                    </div>
+
+                    <div id="statusMessages"></div>
+                </div>
+
+                <div class="feature-section">
+                    <h4 class="section-header">
+                        <span>📊</span>
+                        Optimization & 🔋 Energy Analytics
+                    </h4>
+                    <div id="analyticsContainer">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">⚡📊</div>
+                            <div class="placeholder-title">Analytics Ready</div>
+                            <div class="placeholder-subtitle">Submit a medical query to see optimization metrics,
+                                energy savings (kWh), and a detailed before-and-after comparison.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer-custom mt-auto">
+        <div class="container">
+            <p class="mb-0">© 2025 PulseQuery AI. All rights reserved.</p>
+            <p class="mb-0">Designed for efficient, intelligent medical query processing.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Global variables
+        let sessionId = null;
+        let userName = null;
+        let energyChartInstance = null;
+
+        // Session validation function
+        function validateSession() {
+            const sessionId = sessionStorage.getItem('sessionId');
+            const userName = sessionStorage.getItem('userName');
+
+            if (!sessionId || !userName) {
+                window.location.href = '/login';
+                return false;
+            }
+
+            return true;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!validateSession()) {
+                return;
+            }
+
+            sessionId = sessionStorage.getItem('sessionId');
+            userName = sessionStorage.getItem('userName');
+
+            document.getElementById('userInfo').textContent = `👨🏻‍⚕️ ${userName}`;
+
+            document.getElementById('logoutBtn').addEventListener('click', function (e) {
+                e.preventDefault();
+                logout();
+            });
+            document.getElementById('optimizeBtn').addEventListener('click', optimizePrompt);
+
+            document.getElementById('userQuery').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    optimizePrompt();
+                }
+            });
+        });
+
+        // Logout functionality
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                const sessionId = sessionStorage.getItem('sessionId');
+
+                document.getElementById('logoutBtn').innerHTML = '🔄 Logging out...';
+                document.getElementById('logoutBtn').disabled = true;
+
+                fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            sessionStorage.clear();
+                            localStorage.clear();
+                            alert('✅ Logged out successfully');
+                            window.location.href = '/login';
+                        } else {
+                            sessionStorage.clear();
+                            localStorage.clear();
+                            alert('⚠️ Session ended locally. Redirecting to login...');
+                            window.location.href = '/login';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Logout error:', error);
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        alert('⚠️ Network error. Session cleared locally.');
+                        window.location.href = '/login';
+                    })
+                    .finally(() => {
+                        document.getElementById('logoutBtn').innerHTML = 'Logout';
+                        document.getElementById('logoutBtn').disabled = false;
+                    });
+            }
+        }
+
+        // ✅ FIXED: Optimize prompt with proper kWh and rounded value handling
+        async function optimizePrompt() {
+            const query = document.getElementById('userQuery').value.trim();
+            const useContext = document.getElementById('useContext').checked;
+
+            if (!query) {
+                showStatus('Please enter a medical query first.', 'warning');
+                return;
+            }
+
+            showStatus('🔄 Optimizing prompt and analyzing query...', 'info');
+
+            try {
+                const response = await fetch('/api/prompt/optimize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({
+                        query,
+                        use_context: useContext
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('optimizedPrompt').value = data.optimized_prompt;
+                    document.getElementById('optimizedPromptSection').style.display = 'block';
+
+                    // ✅ FIXED: Update analytics with all proper values in kWh and rounded
+                    if (data.energy_metrics && data.original_metrics && data.metrics) {
+                        updateAnalytics(data.energy_metrics, data.original_metrics, data.metrics);
+                    }
+
+                    showStatus('✅ Prompt optimized successfully! Analytics updated with kWh values.', 'success');
+                } else {
+                    showStatus('❌ Optimization failed: ' + (data.error || 'Unknown error'), 'danger');
+                }
+            } catch (error) {
+                showStatus('❌ Network error: ' + error.message, 'danger');
+            }
+        }
+
+        // ✅ COMPLETELY FIXED: Update analytics with kWh conversion and proper rounding
+        function updateAnalytics(energyData, originalMetrics, optimizedMetrics) {
+            const container = document.getElementById('analyticsContainer');
+
+            // ✅ FIXED: Calculate all values with proper defaults and rounding
+            const originalLength = originalMetrics.length || 0;
+            const optimizedLength = optimizedMetrics.length || 0;
+            const originalTokens = originalMetrics.token_estimate || 0;
+            const optimizedTokens = optimizedMetrics.token_estimate || 0;
+            const originalMedical = Math.round((originalMetrics.medical_terminology_density || 0) * 100);
+            const optimizedMedical = Math.round((optimizedMetrics.medical_terminology_density || 0) * 100);
+
+            // ✅ FIXED: Energy metrics with kWh conversion and proper rounding
+            const tokensReduced = energyData.tokens_reduced || 0;
+            const energySavedKwh = energyData.energy_saved_kwh || 0;  // Already in kWh from backend
+            const efficiencyPercent = energyData.efficiency_improvement_percent || 0;  // Already rounded
+            const costSavedUsd = energyData.cost_saved_usd || 0;
+
+            // ✅ FIXED: Format values to prevent card overflow
+            const formatLargeNumber = (num) => {
+                if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+                if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+                return num.toString();
+            };
+
+            const formatSmallNumber = (num, decimals = 6) => {
+                if (num === 0) return '0';
+                if (num < 0.000001) return num.toExponential(2);
+                return num.toFixed(decimals);
+            };
+
+            container.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="energy-metric">
+                            <div class="energy-value">${formatLargeNumber(tokensReduced)}</div>
+                            <div class="energy-label">Tokens Saved</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="energy-metric">
+                            <div class="energy-value">${formatSmallNumber(energySavedKwh, 9)} kWh</div>
+                            <div class="energy-label">Energy Saved 🌱</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="energy-metric">
+                            <div class="energy-value">${efficiencyPercent}%</div>
+                            <div class="energy-label">Efficiency Gain</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="energy-metric">
+                            <div class="energy-value">$${formatSmallNumber(costSavedUsd, 8)}</div>
+                            <div class="energy-label">Cost Savings 💵</div>
+                        </div>
+                    </div>
+                </div>
+
+                <canvas id="energyChart" width="400" height="200" style="margin-top: 24px;"></canvas>
+
+                <div class="mt-4">
+                    <h5 style="color: var(--gray-900); font-weight: 700; margin-bottom: 20px;">⚖️ Before 🆚 After
+                        Comparison</h5>
+                    
+                    <div class="comparison-card">
+                        <div class="comparison-header">Characters Count</div>
+                        <div class="comparison-row">
+                            <div class="before-after before-metric">Before: <strong>${originalLength.toLocaleString()}</strong></div>
+                            <div class="before-after after-metric">After: <strong>${optimizedLength.toLocaleString()}</strong></div>
+                            <div class="badge bg-secondary">Change: ${optimizedLength - originalLength >= 0 ? '+' : ''}${(optimizedLength - originalLength).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-card">
+                        <div class="comparison-header">Estimated Tokens</div>
+                        <div class="comparison-row">
+                            <div class="before-after before-metric">Before: <strong>~${originalTokens.toLocaleString()}</strong></div>
+                            <div class="before-after after-metric">After: <strong>~${optimizedTokens.toLocaleString()}</strong></div>
+                            <div class="badge bg-secondary">Change: ${optimizedTokens - originalTokens >= 0 ? '+' : ''}${(optimizedTokens - originalTokens).toLocaleString()}</div>
+                        </div>
+                    </div>
+
+                    <div class="comparison-card">
+                        <div class="comparison-header">Medical Terms Density</div>
+                        <div class="comparison-row">
+                            <div class="before-after before-metric">Before: <strong>${originalMedical}%</strong></div>
+                            <div class="before-after after-metric">After: <strong>${optimizedMedical}%</strong></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // ✅ FIXED: Create chart with proper data
+            const ctx = document.getElementById('energyChart').getContext('2d');
+
+            if (energyChartInstance) {
+                energyChartInstance.destroy();
+            }
+
+            energyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Original Tokens', 'Optimized Tokens', 'Tokens Saved'],
+                    datasets: [{
+                        data: [originalTokens, optimizedTokens, tokensReduced],
+                        backgroundColor: ['#6b7280', '#374151', '#22c55e'],
+                        borderColor: ['#4b5563', '#1f2937', '#16a34a'],
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#111827',
+                            bodyColor: '#374151',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function (context) {
+                                    return context.label + ': ' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f3f4f6'
+                            },
+                            ticks: {
+                                color: '#6b7280',
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Utility functions
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessages');
+            statusDiv.innerHTML = `<div class="alert alert-${type}" style="border-radius: 12px;">${message}</div>`;
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function resetChat() {
+            document.getElementById('userQuery').value = '';
+            document.getElementById('optimizedPrompt').value = '';
+            document.getElementById('optimizedPromptSection').style.display = 'none';
+            document.getElementById('statusMessages').innerHTML = '';
+
+            const analyticsContainer = document.getElementById('analyticsContainer');
+            analyticsContainer.innerHTML = `
+                <div class="placeholder-content">
+                    <div class="placeholder-icon">⚡📊</div>
+                    <div class="placeholder-title">Analytics Ready</div>
+                    <div class="placeholder-subtitle">Submit a medical query to see optimization metrics,
+                        energy savings (kWh), and a detailed before-and-after comparison.</div>
+                </div>
+            `;
+
+            if (energyChartInstance) {
+                energyChartInstance.destroy();
+                energyChartInstance = null;
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -13,7 +13,8 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 import tempfile
 import shutil
-from core.prompt_optimizer import EnglishMedicalPromptOptimizer
+from core.prompt_optimizer import EnergyEfficientMedicalOptimizer
+from core.prompt_optimizer import FlaskIntegrationWrapper
 
 # ✅ PERSISTENCE FIX: Direct ChromaDB imports for better control
 import chromadb
@@ -143,14 +144,15 @@ class RAGSystem:
         
         print(f"🧠 Selected embedding model: {self.embedding_model_name}")
         
-        self.prompt_optimizer = EnglishMedicalPromptOptimizer()
+        self.prompt_optimizer = EnergyEfficientMedicalOptimizer()
         print("✅ English Medical Prompt Optimizer integrated")
         
         # ✅ PERSISTENCE FIX: Initialize persistent ChromaDB components
         self.chroma_client = None
         self.chroma_collection = None
         self.collection_name = "medical_documents_persistent"
-        
+        self.prompt_optimizer = FlaskIntegrationWrapper()
+
         # Storage
         self.embeddings = None
         self.db_manager = None

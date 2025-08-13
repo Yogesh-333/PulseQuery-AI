@@ -205,3 +205,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+models/medgemma-4b-it-q8_0.gguf
+models/logreg_sgd_finetuned.joblib
+models/logreg_sgd_base.joblib
