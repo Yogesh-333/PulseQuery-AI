@@ -1,0 +1,71 @@
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from models import db, User, Patient, Vital, LabRequest, Appointment
+from datetime import datetime, timedelta
+import os
+
+def init_db_fast():
+    app = Flask(__name__)
+    db_path = os.path.join(os.getcwd(), 'pulsequery.db')
+    print(f"DEBUG: Database path: {db_path}")
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    db.init_app(app)
+    
+    with app.app_context():
+        print("Creating tables...")
+        db.create_all()
+        
+        # Check if users exist
+        if not User.query.filter_by(username='admin1').first():
+            print("Creating default users...")
+            
+            # Admin
+            admin = User(username='admin1', role='admin', name='Admin Eve Wilson', department='IT')
+            admin.set_password('admin123')
+            db.session.add(admin)
+            
+            # Doctor
+            doctor = User(username='doctor1', role='doctor', name='Dr. Alice Johnson', department='Cardiology')
+            doctor.set_password('password123')
+            db.session.add(doctor)
+            
+            # Lab
+            lab = User(username='lab1', role='lab', name='Lab Technician Max', department='Pathology')
+            lab.set_password('lab123')
+            db.session.add(lab)
+            
+            # Patient User (for login)
+            patient_user = User(username='patient1', role='patient', name='John Doe', department=None)
+            patient_user.set_password('patient123')
+            db.session.add(patient_user)
+            
+            db.session.commit()
+            
+            # Create Patient Record
+            print("Creating dummy patient data...")
+            patient = Patient(name='John Doe', age=45, gender='Male', contact='555-0123', medical_history='Hypertension, Type 2 Diabetes')
+            db.session.add(patient)
+            db.session.commit()
+            
+            # Create Vitals
+            vitals = Vital(patient_id=patient.id, bp='130/85', heart_rate=78, temperature=36.6, weight=82.5)
+            db.session.add(vitals)
+            
+            # Create Lab Request
+            lab_req = LabRequest(patient_id=patient.id, doctor_id=doctor.id, test_type='Complete Blood Count', status='pending')
+            db.session.add(lab_req)
+            
+            # Create Appointment
+            appt = Appointment(patient_id=patient.id, doctor_id=doctor.id, date=datetime.now() + timedelta(days=2), reason='Regular Checkup')
+            db.session.add(appt)
+            
+            db.session.commit()
+            print("✅ Database initialized with default data!")
+        else:
+            print("ℹ️ Database already initialized.")
+
+if __name__ == "__main__":
+    init_db_fast()

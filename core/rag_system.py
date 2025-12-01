@@ -559,7 +559,7 @@ class RAGSystem:
                 'chunks_created': 0
             }
     
-    def search_relevant_context(self, query: str, max_docs: int = 5) -> List[Dict[str, Any]]:
+    def search_relevant_context(self, query: str, max_docs: int = 5, patient_id: Optional[int] = None) -> List[Dict[str, Any]]:
         """
         ✅ PERSISTENCE FIX: Search for relevant documents using persistent medical-specialized semantic similarity
         """
@@ -575,9 +575,13 @@ class RAGSystem:
                 query_embedding = self.embeddings.embed_query(query)
                 
                 # Search persistent collection
+                # ✅ PATIENT CONTEXT: Filter by patient_id if provided
+                where_filter = {"patient_id": str(patient_id)} if patient_id else None
+                
                 results = self.chroma_collection.query(
                     query_embeddings=[query_embedding],
                     n_results=max_docs,
+                    where=where_filter, # Filter by metadata
                     include=["documents", "metadatas", "distances"]
                 )
                 
