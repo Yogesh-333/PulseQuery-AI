@@ -749,6 +749,7 @@ def register_routes(app):
     @require_auth(app.session_manager)
     def consultation_chat():
         """AI Consultation Chat with Patient Context"""
+        """AI Consultation Chat with Patient Context and RAG"""
         try:
             logger.info("➡️ Consultation chat request received")
             data = request.get_json()
@@ -762,6 +763,8 @@ def register_routes(app):
                 
             # Get patient context if patient_id is provided
             context = ""
+            rag_context_str = ""
+            
             if patient_id:
                 from models import Patient, Vital
                 patient = Patient.query.get(patient_id)
@@ -769,16 +772,41 @@ def register_routes(app):
                     logger.info(f"👤 Found patient: {patient.name}")
                     vitals = Vital.query.filter_by(patient_id=patient_id).order_by(Vital.recorded_at.desc()).first()
                     
-                    # Construct context-aware prompt
+                    # 1. Database Context
                     context = f"Patient: {patient.name}, Age: {patient.age}, Gender: {patient.gender}\n"
                     context += f"History: {patient.medical_history}\n"
                     if vitals:
                         context += f"Vitals: BP {vitals.bp}, HR {vitals.heart_rate}, Temp {vitals.temperature}\n"
-                    context = f"Context:\n{context}\n\n"
+                    
+                    # 2. RAG Context (Enhanced with Patient Name)
+                    if RAG_AVAILABLE and app.rag_system:
+                        try:
+                            # Append patient name to query for better retrieval
+                            rag_query = f"{query} for patient {patient.name}"
+                            logger.info(f"🔍 RAG Search Query: {rag_query}")
+                            
+                            rag_docs = app.rag_system.search_relevant_context(rag_query, max_docs=3)
+                            if rag_docs:
+                                rag_context_str = "\nRelevant Medical Records:\n" + "\n".join(rag_docs)
+                                logger.info(f"📄 Retrieved {len(rag_docs)} RAG documents")
+                            else:
+                                logger.info("⚠️ No RAG documents found")
+                        except Exception as rag_e:
+                            logger.error(f"❌ RAG search failed: {rag_e}")
+                    
+                    context = f"Context:\n{context}\n{rag_context_str}\n\n"
                 else:
                     logger.warning(f"⚠️ Patient not found for ID: {patient_id}")
             
-            full_prompt = f"{context}User Query: {query}\n\nMedical Assistant Response:"
+            # Construct Prompt with Strict Instruction
+            full_prompt = f"""You are a medical AI assistant.
+{context}
+User Query: {query}
+
+INSTRUCTION: If there is no past history or relevant information found in the context (Database or Records) to answer the query, reply EXACTLY "no past history found" with no other text or explanation.
+
+Medical Assistant Response:"""
+
             logger.info(f"🤖 Sending prompt to MedGemma (Length: {len(full_prompt)})")
             
             # Use MedGemma if available, else fallback
@@ -787,6 +815,10 @@ def register_routes(app):
                 result = app.medgemma.generate_text(full_prompt)
                 logger.info("✅ MedGemma response received")
                 response = result.get('generated_text', "No response generated.")
+                
+                # Clean up response if it contains the prompt
+                if "Medical Assistant Response:" in response:
+                     response = response.split("Medical Assistant Response:")[-1].strip()
             else:
                 logger.info("⚠️ MedGemma not available, using simulation")
                 if patient_id:
